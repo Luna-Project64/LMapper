@@ -186,8 +186,6 @@ namespace Win
 
 		PathAppend(_strPath, "LMapper");
 		CreateDirectory(_strPath, nullptr); // can fail, ignore errors
-		size_t length = strlen(_strPath);
-
 		PathAppend(_strPath, "cfg.yaml");
 		int fd = _open(_strPath, _O_BINARY | _O_WRONLY | _O_CREAT | _O_EXCL, 0666);
 		if (-1 != fd)

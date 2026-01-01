@@ -332,4 +332,6 @@ extern "C" EXPORT void CALL PluginLoaded(void)
         if (!cfg)
             *gPluginConfigDir = '\0';
     }
+
+    gPlugin.ReadConfig();
 }
