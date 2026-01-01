@@ -6,6 +6,8 @@
 #include <shlwapi.h>
 #include <Windows.h>
 
+extern char gPluginConfigDir[MAX_PATH];
+
 static const char kDefaultConfig[] = R"(# hacks: [ "savestate", "test" ]
 
 enabled: [ 1 ]
@@ -169,11 +171,18 @@ namespace Win
 		if ('\0' != *_strPath)
 			return _strPath;
 
-		SHGetFolderPath(NULL,
-			CSIDL_APPDATA,
-			NULL,
-			0,
-			_strPath);
+        if (*gPluginConfigDir)
+        {
+            strncpy_s(_strPath, gPluginConfigDir, sizeof(_strPath));
+		}
+        else
+        {
+            SHGetFolderPath(NULL,
+                CSIDL_APPDATA,
+                NULL,
+                0,
+                _strPath);
+        }
 
 		PathAppend(_strPath, "LMapper");
 		CreateDirectory(_strPath, nullptr); // can fail, ignore errors
