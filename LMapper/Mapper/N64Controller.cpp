@@ -1,4 +1,6 @@
 #include "N64Controller.h"
+
+#include "Luna.h"
 #include "ControllerInterfaceImpl.h"
 #include "SerializationImpl.h"
 
@@ -76,6 +78,13 @@ namespace YAML
 
         if (node.IsMap())
         {
+            auto cmdNode = node["cmd"];
+            if (cmdNode)
+            {
+                ptr = cmdNode.as<Luna::CmdPtr>();
+                return true;
+            }
+
             auto typeNode = node["type"];
             if (!typeNode)
                 return false;

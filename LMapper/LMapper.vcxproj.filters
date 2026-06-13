@@ -75,6 +75,9 @@
     <ClInclude Include="Mapper\Keyboard.h">
       <Filter>Header Files\Mapper</Filter>
     </ClInclude>
+    <ClInclude Include="Mapper\Luna.h">
+      <Filter>Header Files\Mapper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -115,6 +118,9 @@
     </ClCompile>
     <ClCompile Include="win.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mapper\Luna.cpp">
+      <Filter>Source Files\Mapper</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

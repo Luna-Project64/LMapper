@@ -3,6 +3,7 @@
 #include "plugin.h"
 #include "savestate.h"
 #include "Win.h"
+#include "Mapper/Luna.h"
 
 static Plugin gPlugin;
 
@@ -160,6 +161,7 @@ EXPORT void CALL GetKeys(int Control, BUTTONS* Keys)
 *******************************************************************/
 EXPORT void CALL InitiateControllers(HWND hMainWindow, CONTROL Controls[4])
 {
+	Luna::gMainWindow = hMainWindow;
     XINPUT_STATE state;
     for (int i = 0; i <= 3; i++)
     {
@@ -334,4 +336,9 @@ extern "C" EXPORT void CALL PluginLoaded(void)
     }
 
     gPlugin.ReadConfig();
+}
+
+extern "C" EXPORT void CALL LunaSetExCommandHandler(LunaExCommandFn fn)
+{
+    Luna::gExCommandHandler = fn;
 }

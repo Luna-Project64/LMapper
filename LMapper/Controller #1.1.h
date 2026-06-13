@@ -223,6 +223,17 @@ EXPORT void CALL WM_KeyDown( WPARAM wParam, LPARAM lParam );
 *******************************************************************/ 
 EXPORT void CALL WM_KeyUp( WPARAM wParam, LPARAM lParam );
 
+enum LunaExCommand
+{
+	LUNA_EXCMD_LOAD_STATE,
+	LUNA_EXCMD_SAVE_STATE,
+	LUNA_EXCMD_UNLOCK_FPS,
+	LUNA_EXCMD_LOCK_FPS,
+};
+
+typedef void(CALL* LunaExCommandFn)(HWND, LunaExCommand);
+EXPORT void CALL LunaSetExCommandHandler(LunaExCommandFn);
+
 #if defined(__cplusplus)
 }
 #endif
