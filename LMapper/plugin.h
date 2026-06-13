@@ -12,7 +12,6 @@ public:
 
     const Mapping::Mappers& Mappers() const { return cfg.mappers; }
     const std::string& ConfigPath() const { return configPath; }
-    bool savestateHack() const { return cfg.savestateHack; }
     char enabledControllersMask() const { return cfg.enabledControllersMask; }
 
     void clearKeys()

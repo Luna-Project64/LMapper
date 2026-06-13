@@ -12,11 +12,17 @@ namespace Mapping
         LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::LinearMapper(FromConverter from, ToConverter to, Deadzoner dz) : fromConverter_(from), toConverter_(to), deadzoner_(dz) { }
 
         template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        std::string LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::ToString()
+        std::optional<IMapper::StringDescription> LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::ToString() const
         {
-            std::ostringstream ss;
-            ss << "Linear { " << fromConverter_.ToString() << "} -> { " << toConverter_.ToString() << "}";
-            return ss.str();
+			auto fromDesc = fromConverter_.ToString();
+            if (!fromDesc)
+				return std::nullopt;
+
+			auto toDesc = toConverter_.ToString();
+			if (!toDesc)
+				return std::nullopt;
+
+            return StringDescription{ "linear", *fromDesc, *toDesc };
         }
 
         template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
@@ -49,12 +55,25 @@ namespace Mapping
         }
 
         template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        std::string BilinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::ToString()
+        std::optional<IMapper::StringDescription> BilinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::ToString() const
         {
-            std::ostringstream ss;
-            ss << "Bilinear { " << fromConverters_[0].ToString() << "}x{" << fromConverters_[1].ToString() << 
-                      "} -> { " << toConverters_[0].ToString()   << "}x{" << toConverters_[1].ToString()   << "}";
-            return ss.str();
+			auto fromXDesc = fromConverters_[0].ToString();
+            if (!fromXDesc)
+				return std::nullopt;
+
+            auto fromYDesc = fromConverters_[1].ToString();
+			if (!fromYDesc)
+				return std::nullopt;
+
+            auto toXDesc = toConverters_[0].ToString();
+			if (!toXDesc)
+                return std::nullopt;
+
+			auto toYDesc = toConverters_[1].ToString();
+            if (!toYDesc)
+				return std::nullopt;
+
+			return IMapper::StringDescription{ "bilinear", *fromXDesc + " & " + *fromYDesc, *toXDesc + " & " + *toYDesc };
         }
 
         template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>

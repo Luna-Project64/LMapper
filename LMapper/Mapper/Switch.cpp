@@ -9,9 +9,9 @@ namespace Mapping
         , mappers_(std::move(m))
     { }
 
-    std::string Switcher::ToString()
+    std::optional<IMapper::StringDescription> Switcher::ToString() const
     {
-        return {};
+        return std::nullopt;
     }
 
     void Switcher::Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to)

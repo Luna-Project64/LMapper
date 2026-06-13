@@ -3,44 +3,82 @@
 #include "Keyboard.h"
 #include "SerializationImpl.h"
 
+#define THUMBS \
+    ENUMSTR(LeftX) \
+    ENUMSTR(LeftY) \
+    ENUMSTR(RightX) \
+    ENUMSTR(RightY)
+
+#define TRIGGERS \
+    ENUMSTR(LeftTrigger) \
+    ENUMSTR(RightTrigger)
+
+#define BUTTONS \
+    ENUMSTR(DpadUp) \
+    ENUMSTR(DpadDown) \
+    ENUMSTR(DpadLeft) \
+    ENUMSTR(DpadRight) \
+    ENUMSTR(Start) \
+    ENUMSTR(Back) \
+    ENUMSTR(LeftThumb) \
+    ENUMSTR(RightThumb) \
+    ENUMSTR(L) \
+    ENUMSTR(R) \
+    ENUMSTR(Guide) \
+    ENUMSTR(A) \
+    ENUMSTR(B) \
+    ENUMSTR(X) \
+    ENUMSTR(Y)
+
+namespace ControllerInterface
+{
+    template<>
+    std::optional<std::string> toOffsetString<X360::Thumbs>(size_t offset)
+    {
+        std::optional<std::string> offsetStr;
+        switch (offset)
+        {
+#define ENUMSTR(name) case X360::Thumbs::name: offsetStr = #name; break;
+            THUMBS
+#undef ENUMSTR
+        }
+        return offsetStr;
+    }
+
+	template<>
+    std::optional<std::string> toOffsetString<X360::Triggers>(size_t offset)
+    {
+        std::optional<std::string> offsetStr;
+        switch (offset)
+        {
+#define ENUMSTR(name) case X360::Triggers::name: offsetStr = #name; break;
+            TRIGGERS
+#undef ENUMSTR
+        }
+        return offsetStr;
+    }
+}
+
 namespace YAML
 {
     const std::map<std::string, X360::Thumbs> convert<X360::Thumbs>::names
     {
-#define ENUMSTR(name) { #name, X360::Thumbs::name } 
-        ENUMSTR(LeftX),
-        ENUMSTR(LeftY),
-        ENUMSTR(RightX),
-        ENUMSTR(RightY),
+#define ENUMSTR(name) { #name, X360::Thumbs::name },
+		THUMBS
 #undef ENUMSTR
     };
 
     const std::map<std::string, X360::Triggers> convert<X360::Triggers>::names
     {
-#define ENUMSTR(name) { #name, X360::Triggers::name } 
-        ENUMSTR(LeftTrigger),
-        ENUMSTR(RightTrigger),
+#define ENUMSTR(name) { #name, X360::Triggers::name },
+        TRIGGERS
 #undef ENUMSTR
     };
 
     const std::map<std::string, X360::Buttons> convert<X360::Buttons>::names
     {
-#define ENUMSTR(name) { #name, X360::Buttons::name } 
-        ENUMSTR(DpadUp),
-        ENUMSTR(DpadDown),
-        ENUMSTR(DpadLeft),
-        ENUMSTR(DpadRight),
-        ENUMSTR(Start),
-        ENUMSTR(Back),
-        ENUMSTR(LeftThumb),
-        ENUMSTR(RightThumb),
-        ENUMSTR(L),
-        ENUMSTR(R),
-        ENUMSTR(Guide),
-        ENUMSTR(A),
-        ENUMSTR(B),
-        ENUMSTR(X),
-        ENUMSTR(Y),
+#define ENUMSTR(name) { #name, X360::Buttons::name },
+        BUTTONS
 #undef ENUMSTR
     };
 
@@ -206,9 +244,15 @@ namespace X360
         return Applied(c.wButtons);
     }
 
-    std::string Button::ToString()
+    std::optional<std::string> Button::ToString() const
     {
-        return "";
+        switch (button_)
+        {
+#define ENUMSTR(name) case X360::Buttons::name: return #name;
+            BUTTONS
+#undef ENUMSTR
+        }
+        return std::nullopt;
     }
 
     template<typename AxisT, typename OffsetT>
@@ -220,10 +264,31 @@ namespace X360
         return IAxis<AxisT, OffsetT>::Applied(&c);
     }
 
-    template<typename AxisT, typename OffsetT>
-    std::string Axis<AxisT, OffsetT>::ToString()
+    static std::optional<std::string> toString(const ControllerInterface::AxisComparerType& type)
     {
-        return "";
+        switch (type)
+        {
+        case ControllerInterface::AxisComparerType::Less:
+            return "<";
+        case ControllerInterface::AxisComparerType::More:
+            return ">";
+        default:
+            return std::nullopt;
+        }
+	}
+
+    template<typename AxisT, typename OffsetT>
+    std::optional<std::string> Axis<AxisT, OffsetT>::ToString() const
+    {
+        std::optional<std::string> offsetStr = ControllerInterface::toOffsetString<OffsetT>(offset_);
+        if (!offsetStr)
+			return std::nullopt;
+
+		std::optional<std::string> comparerStr = toString(comparer_.type_);
+        if (!comparerStr)
+            return std::nullopt;
+
+		return *offsetStr + " " + *comparerStr + " " + std::to_string(axis_);
     }
 
     // TODO: Stupid!

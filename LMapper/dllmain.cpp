@@ -2,6 +2,7 @@
 #include "Controller #1.1.h"
 #include "plugin.h"
 #include "savestate.h"
+#include "ui.h"
 #include "Win.h"
 #include "Mapper/Luna.h"
 
@@ -13,6 +14,15 @@ BOOL APIENTRY DllMain( HMODULE hModule,
                        LPVOID lpReserved
                      )
 {
+    if (ul_reason_for_call == DLL_PROCESS_ATTACH)
+    {
+        ConfigInit(hModule);
+    }
+    else if (ul_reason_for_call == DLL_PROCESS_DETACH)
+    {
+        ConfigCleanup();
+    }
+
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
@@ -86,23 +96,7 @@ EXPORT void CALL DllAbout(HWND hParent)
 *******************************************************************/
 EXPORT void CALL DllConfig(HWND hParent)
 {
-    SHELLEXECUTEINFO ShExecInfo = { 0 };
-    ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-    ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-    ShExecInfo.hwnd = NULL;
-    ShExecInfo.lpVerb = "runas";
-    ShExecInfo.lpFile = "notepad.exe";
-    ShExecInfo.lpParameters = Win::ConfigPath().c_str();
-    ShExecInfo.lpDirectory = NULL;
-    ShExecInfo.nShow = SW_SHOW;
-    ShExecInfo.hInstApp = NULL;
-    ShellExecuteEx(&ShExecInfo);
-    if (ShExecInfo.hProcess)
-    {
-        WaitForSingleObject(ShExecInfo.hProcess, INFINITE);
-        CloseHandle(ShExecInfo.hProcess);
-    }
-
+    DialogPresent(hParent);
     gPlugin.ReadConfig();
 }
 
@@ -227,11 +221,6 @@ EXPORT void CALL RomOpen(void)
 *******************************************************************/
 EXPORT void CALL WM_KeyDown(WPARAM wParam, LPARAM lParam) 
 {
-    if (gPlugin.savestateHack())
-    {
-        Savestate::handleKey(wParam, lParam);
-    }
-
     gPlugin.setActiveKey(wParam);
 }
 

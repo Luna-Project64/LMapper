@@ -19,6 +19,9 @@
     <Filter Include="Header Files\Mapper">
       <UniqueIdentifier>{5809a897-9516-45b9-a4b9-a3c54200da66}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\WTL">
+      <UniqueIdentifier>{45bf9dc7-5c97-45f5-bb51-5f3c860272a5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Controller #1.1.h">
@@ -78,6 +81,72 @@
     <ClInclude Include="Mapper\Luna.h">
       <Filter>Header Files\Mapper</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlapp.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlcrack.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlctrls.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlctrlw.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlctrlx.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlddx.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atldlgs.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atldwm.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlfind.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlframe.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlgdi.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlmisc.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlprint.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlres.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlribbon.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlscrl.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlsplit.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atltheme.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atluser.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="WTL\atlwinx.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -110,9 +179,6 @@
     <ClCompile Include="config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="savestate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Mapper\Keyboard.cpp">
       <Filter>Source Files\Mapper</Filter>
     </ClCompile>
@@ -122,5 +188,13 @@
     <ClCompile Include="Mapper\Luna.cpp">
       <Filter>Source Files\Mapper</Filter>
     </ClCompile>
+    <ClCompile Include="ui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="UI.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

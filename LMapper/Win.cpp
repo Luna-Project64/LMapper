@@ -8,9 +8,7 @@
 
 extern char gPluginConfigDir[MAX_PATH];
 
-static const char kDefaultConfig[] = R"(# hacks: [ "savestate", "test" ]
-
-enabled: [ 1 ]
+const char* kDefaultConfig = R"(enabled: [ 1 ]
 
 controller:
 # Button mapping

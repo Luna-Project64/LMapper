@@ -14,7 +14,7 @@ namespace Luna
 		/* LUNA_EXCMD_LOCK_FPS   */ "lock_fps"
 	};
 
-	std::string Cmd::ToString()
+	std::optional<std::string> Cmd::ToString() const
 	{
 		return sNames[cmd_];
 	}

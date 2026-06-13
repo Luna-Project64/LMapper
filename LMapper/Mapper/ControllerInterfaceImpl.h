@@ -113,11 +113,9 @@ namespace ControllerInterface
         : offset_(offset), center_(center), maxval_(max) { }
 
     template<typename OffsetT, typename StickT>
-    std::string LinearConverter<OffsetT, StickT>::ToString() const
+    std::optional<std::string> LinearConverter<OffsetT, StickT>::ToString() const
     {
-        std::ostringstream ss;
-        ss << "c=" << +center_ << "; m=" << +maxval_ << "; o=" << offset_;
-        return ss.str();
+        return ControllerInterface::toOffsetString<OffsetT>(offset_);
     }
 
     template<typename OffsetT, typename StickT>

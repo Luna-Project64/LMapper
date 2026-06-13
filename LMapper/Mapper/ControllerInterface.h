@@ -5,6 +5,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace YAML
@@ -30,7 +31,7 @@ namespace ControllerInterface
 
         bool Applied(const std::atomic_bool*) const;
 
-    private:
+    protected:
         const ButtonT button_;
     };
 
@@ -51,9 +52,11 @@ namespace ControllerInterface
 
         bool operator()(const T a, const T b) const;
 
-    private:
         const Type type_;
     };
+
+    template<typename AxisT>
+    std::optional<std::string> toOffsetString(size_t);
 
     // OffsetT must have size_t as a Base
     template<typename AxisT, typename OffsetT>
@@ -65,7 +68,7 @@ namespace ControllerInterface
 
         void Apply(void* ptr) const;
 
-    private:
+    protected:
         static const char name_[];
         AxisT axis_;
         OffsetT offset_;
@@ -80,7 +83,7 @@ namespace ControllerInterface
 
         bool Applied(const void* ptr) const;
 
-    private:
+    protected:
         static const char name_[];
         AxisT axis_;
         OffsetT offset_;
@@ -91,7 +94,7 @@ namespace ControllerInterface
     class IEvent : public virtual Serialization::ISerializable
     {
     public:
-        virtual std::string ToString() = 0;
+        virtual std::optional<std::string> ToString() const = 0;
         virtual bool Happened(const ControllerT&, const std::atomic_bool* keyboard) const = 0;
     };
 
@@ -99,7 +102,7 @@ namespace ControllerInterface
     class IModifier : public virtual Serialization::ISerializable
     {
     public:
-        virtual std::string ToString() = 0;
+        virtual std::optional<std::string> ToString() const = 0;
         virtual void Alter(ControllerT&) const = 0;
     };
 
@@ -117,7 +120,7 @@ namespace ControllerInterface
         LinearConverter() = default;
         LinearConverter(OffsetT offset, StickT center, StickT max);
 
-        std::string ToString() const;
+        std::optional<std::string> ToString() const;
         StickT* Get(void* ptr) const { return fieldin(ptr, StickT, offset_); }
         const StickT* Get(const void* ptr) const { return fieldin(ptr, const StickT, offset_); }
 
@@ -129,6 +132,7 @@ namespace ControllerInterface
 
         virtual YAML::Node Serialize() const override;
 
+    protected:
         OffsetT offset_;
         StickT center_;
         StickT maxval_;
@@ -146,6 +150,7 @@ namespace ControllerInterface
 
         virtual YAML::Node Serialize() const override;
 
+    protected:
         float fromSlope_;
         float toSlope_;
         float power_;
@@ -164,6 +169,7 @@ namespace ControllerInterface
 
         virtual YAML::Node Serialize() const override;
 
+    protected:
         float size_;
     };
 
@@ -184,7 +190,8 @@ namespace ControllerInterface
         void Apply(float(&arr)[2]) const;
 
         virtual YAML::Node Serialize() const override;
-        
+
+    protected:
         AxisDeadzoneSize size_[2];
     };
 
@@ -198,6 +205,7 @@ namespace ControllerInterface
 
         virtual YAML::Node Serialize() const override;
 
+    protected:
         int count_;
         float size_;
     };

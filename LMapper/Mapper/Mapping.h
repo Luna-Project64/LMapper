@@ -16,7 +16,14 @@ namespace Mapping
     class IMapper : public Serialization::ISerializable
     {
     public:
-        virtual std::string ToString() = 0;
+        struct StringDescription
+        {
+            std::string type;
+            std::string from;
+            std::string to;
+        };
+
+        virtual std::optional<StringDescription> ToString() const = 0;
         virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) = 0;
     };
     using IMapperPtr = std::shared_ptr<IMapper>;
@@ -33,7 +40,7 @@ namespace Mapping
 
             LinearMapper(FromConverter, ToConverter, Deadzoner);
 
-            virtual std::string ToString() override;
+            virtual std::optional<StringDescription> ToString() const override;
             virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) override;
             virtual YAML::Node Serialize() const override;
 
@@ -57,8 +64,8 @@ namespace Mapping
             using ToConverter       = ControllerInterface::LinearConverter<ToOffsetT, ToStickT>;
 
             BilinearMapper(FromConverter fX, FromConverter fY, ToConverter tX, ToConverter tY, Stretcher, Deadzoner, BilinearDeadzoner, AngleLimiter);
-
-            virtual std::string ToString() override;
+            
+            virtual std::optional<StringDescription> ToString() const override;
             virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) override;
             virtual YAML::Node Serialize() const override;
 
@@ -97,7 +104,7 @@ namespace Mapping
         public:
             Mapper(X360::IEventPtr from, N64::IModifierPtr to);
 
-            virtual std::string ToString() override;
+            virtual std::optional<StringDescription> ToString() const override;
             virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) override;
             virtual YAML::Node Serialize() const override;
 

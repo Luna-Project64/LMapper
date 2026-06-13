@@ -59,7 +59,7 @@ namespace X360
     public:
         Button(Buttons);
 
-        virtual std::string ToString() override;
+        virtual std::optional<std::string> ToString() const override;
         virtual bool Happened(const Controller&, const std::atomic_bool*) const;
     };
 
@@ -73,7 +73,7 @@ namespace X360
     public:
         Axis(IAxis<AxisT, OffsetT> me);
 
-        virtual std::string ToString() override;
+        virtual std::optional<std::string> ToString() const override;
         virtual bool Happened(const Controller&, const std::atomic_bool*) const;
     };
 

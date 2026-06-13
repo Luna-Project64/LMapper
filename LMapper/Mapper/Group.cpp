@@ -7,9 +7,9 @@ namespace Mapping
         : mappers_(std::move(m))
     { }
 
-    std::string Group::ToString()
+    std::optional<IMapper::StringDescription> Group::ToString() const
     {
-        return {};
+        return std::nullopt;
     }
 
     void Group::Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to)

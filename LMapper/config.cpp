@@ -20,13 +20,6 @@ namespace YAML
             }
             node["enabled"] = enabledControllers;
         }
-        {
-            YAML::Node hacks;
-            if (me.savestateHack)
-                hacks.push_back("savestate");
-
-            node["hacks"] = std::move(hacks);
-        }
         return node;
     }
 
@@ -39,18 +32,6 @@ namespace YAML
                 return false;
             
             cfg.mappers = controllerNode.as<Mapping::Mappers>();
-
-            if (auto hacksNode = node["hacks"])
-            {
-                auto hacks = hacksNode.as<std::vector<std::string>>();
-                for (auto& hack : hacks)
-                {
-                    if ("savestate" == hack)
-                    {
-                        cfg.savestateHack = true;
-                    }
-                }
-            }
 
             if (auto enabledNode = node["enabled"])
             {

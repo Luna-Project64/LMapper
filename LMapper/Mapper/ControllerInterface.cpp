@@ -231,9 +231,11 @@ namespace YAML
         if (!node.IsMap())
             return false;
 
-        me.size_[0] = node["x"].as<ControllerInterface::AxisDeadzoneSize>();
-        me.size_[1] = node["y"].as<ControllerInterface::AxisDeadzoneSize>();
-
+        ControllerInterface::AxisDeadzoneSize sizes[] = {
+            node["x"].as<ControllerInterface::AxisDeadzoneSize>(),
+            node["y"].as<ControllerInterface::AxisDeadzoneSize>()
+        };
+        me = ControllerInterface::BilinearDeadzoner(sizes);
         return true;
     }
 

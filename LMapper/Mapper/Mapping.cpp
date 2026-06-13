@@ -13,11 +13,21 @@ namespace Mapping
     {
         Mapper::Mapper(X360::IEventPtr from, N64::IModifierPtr to) : event_(from), modifier_(to) { }
 
-        std::string Mapper::ToString()
+        std::optional<IMapper::StringDescription> Mapper::ToString() const
         {
-            std::ostringstream ss;
-            ss << "Digital { " << event_->ToString() << "} -> { " << modifier_->ToString() << " }";
-            return ss.str();
+			auto eventDesc = event_->ToString();
+            if (!eventDesc)
+                return std::nullopt;
+
+			auto modifierDesc = modifier_->ToString();
+            if (!modifierDesc)
+				return std::nullopt;
+
+            return StringDescription {
+                "digital",
+                *eventDesc,
+                *modifierDesc
+			};
         }
 
         void Mapper::Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to)

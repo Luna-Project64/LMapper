@@ -52,7 +52,7 @@ namespace N64
     public:
         Button(Buttons);
 
-        virtual std::string ToString() override;
+        virtual std::optional<std::string> ToString() const override;
         virtual void Alter(Controller&) const override;
     };
 
@@ -63,7 +63,7 @@ namespace N64
     public:
         Axis(Axises, signed value);
 
-        virtual std::string ToString() override;
+        virtual std::optional<std::string> ToString() const override;
         virtual void Alter(Controller&) const override;
     };
 

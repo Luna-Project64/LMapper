@@ -4,34 +4,55 @@
 #include "ControllerInterfaceImpl.h"
 #include "SerializationImpl.h"
 
+#define AXIS \
+    ENUMSTR(X) \
+    ENUMSTR(Y)
+
+#define BUTTONS \
+    ENUMSTR(DpadUp) \
+    ENUMSTR(DpadDown) \
+    ENUMSTR(DpadLeft) \
+    ENUMSTR(DpadRight) \
+    ENUMSTR(Start) \
+    ENUMSTR(Z) \
+    ENUMSTR(A) \
+    ENUMSTR(B) \
+    ENUMSTR(CRight) \
+    ENUMSTR(CLeft) \
+    ENUMSTR(CDown) \
+    ENUMSTR(CUp) \
+    ENUMSTR(R) \
+    ENUMSTR(L)
+
+namespace ControllerInterface
+{
+    template<>
+    std::optional<std::string> toOffsetString<N64::Axises>(size_t offset)
+    {
+        switch (offset)
+        {
+#define ENUMSTR(name) case N64::Axises::name: return #name;
+            AXIS
+#undef ENUMSTR
+        }
+
+        return std::nullopt;
+    }
+}
+
 namespace YAML
 {
     const std::map<std::string, N64::Axises> convert<N64::Axises>::names
     {
-#define ENUMSTR(name) { #name, N64::Axises::name } 
-        ENUMSTR(X),
-        ENUMSTR(Y),
+#define ENUMSTR(name) { #name, N64::Axises::name },
+        AXIS
 #undef ENUMSTR
     };
 
     const std::map<std::string, N64::Buttons> convert<N64::Buttons>::names
     {
-#define ENUMSTR(name) { #name, N64::Buttons::name } 
-        ENUMSTR(DpadUp),
-        ENUMSTR(DpadDown),
-        ENUMSTR(DpadLeft),
-        ENUMSTR(DpadRight),
-        ENUMSTR(Start),
-        ENUMSTR(Z),
-        ENUMSTR(A),
-        ENUMSTR(B),
-
-        ENUMSTR(CRight),
-        ENUMSTR(CLeft),
-        ENUMSTR(CDown),
-        ENUMSTR(CUp),
-        ENUMSTR(R),
-        ENUMSTR(L),
+#define ENUMSTR(name) { #name, N64::Buttons::name },
+        BUTTONS
 #undef ENUMSTR
     };
 
@@ -144,9 +165,15 @@ namespace N64
         Apply(c.Value);
     }
 
-    std::string Button::ToString()
+    std::optional<std::string> Button::ToString() const
     {
-        return "";
+        switch (button_)
+        {
+#define ENUMSTR(name) case N64::Buttons::name: return #name;
+            BUTTONS
+#undef ENUMSTR
+        }
+        return std::nullopt;
     }
 
     Axis::Axis(Axises thumb, signed value) : IAxis(value, thumb) { }
@@ -156,8 +183,12 @@ namespace N64
         return Apply(&c);
     }
 
-    std::string Axis::ToString()
+    std::optional<std::string> Axis::ToString() const
     {
-        return "";
+		auto offsetStr = ControllerInterface::toOffsetString<Axises>(offset_);
+        if (!offsetStr)
+			return std::nullopt;
+
+        return *offsetStr + " " + std::to_string(axis_);
     }
 }
