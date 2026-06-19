@@ -24,22 +24,6 @@
     ENUMSTR(R) \
     ENUMSTR(L)
 
-namespace ControllerInterface
-{
-    template<>
-    std::optional<std::string> toOffsetString<N64::Axises>(size_t offset)
-    {
-        switch (offset)
-        {
-#define ENUMSTR(name) case N64::Axises::name: return #name;
-            AXIS
-#undef ENUMSTR
-        }
-
-        return std::nullopt;
-    }
-}
-
 namespace YAML
 {
     const std::map<std::string, N64::Axises> convert<N64::Axises>::names
@@ -154,41 +138,74 @@ namespace YAML
         ptr = std::make_shared<N64::Axis>(offset, value);
         return true;
     }
+
+    Node convert<N64::AxisConverter>::encode(const N64::AxisConverter& ptr)
+    {
+        return convert<ControllerInterface::LinearConverter<N64::Axises, char>>{}.encode(ptr);
+    }
+
+    bool convert<N64::AxisConverter>::decode(const Node& node, N64::AxisConverter& ptr)
+    {
+        return convert<ControllerInterface::LinearConverter<N64::Axises, char>>{}.decode(node, ptr);
+    }
 }
 
 namespace N64
 {
-    Button::Button(Buttons button) : IButton(button) { }
+    Button::Button(Buttons button) : IButton(button) {}
 
     void Button::Alter(Controller& c) const
     {
         Apply(c.Value);
     }
 
-    std::optional<std::string> Button::ToString() const
+    std::optional<Simple::ToButton> Button::ToSimpleButton() const
     {
         switch (button_)
         {
-#define ENUMSTR(name) case N64::Buttons::name: return #name;
+#define ENUMSTR(name) case N64::Buttons::name: return Simple::ToButton::name;
             BUTTONS
 #undef ENUMSTR
         }
+
         return std::nullopt;
     }
 
-    Axis::Axis(Axises thumb, signed value) : IAxis(value, thumb) { }
+    Axis::Axis(Axises thumb, signed value) : IAxis(value, thumb) {}
 
     void Axis::Alter(Controller& c) const
     {
         return Apply(&c);
     }
 
-    std::optional<std::string> Axis::ToString() const
+    static std::optional<Simple::ToButton> toDirection(int value, Simple::ToButton hi, Simple::ToButton lo)
     {
-		auto offsetStr = ControllerInterface::toOffsetString<Axises>(offset_);
-        if (!offsetStr)
-			return std::nullopt;
+        if (value == 80)
+            return hi;
+        if (value == -80)
+            return lo;
 
-        return *offsetStr + " " + std::to_string(axis_);
+        return std::nullopt;
+    }
+
+    std::optional<Simple::ToButton> Axis::ToSimpleButton() const
+    {
+        switch (offset_)
+        {
+        case Axises::X:
+            return toDirection(axis_, Simple::ToButton::StickLeft, Simple::ToButton::StickRight);
+        case Axises::Y:
+            return toDirection(axis_, Simple::ToButton::StickUp, Simple::ToButton::StickDown);
+        default:
+            return std::nullopt;
+        }
+    }
+
+    std::optional<uint8_t> AxisConverter::ToSimpleRangeTo() const
+    {
+        if (0 != center_)
+            return std::nullopt;
+
+        return maxval_;
     }
 }

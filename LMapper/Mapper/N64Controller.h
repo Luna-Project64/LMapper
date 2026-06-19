@@ -21,21 +21,21 @@ namespace N64
     enum Buttons : DWORD
     {
         DpadRight = 0x0001,
-        DpadLeft  = 0x0002,
-        DpadDown  = 0x0004,
-        DpadUp    = 0x0008,
-        Start     = 0x0010,
-        Z         = 0x0020,
-        B         = 0x0040,
-        A         = 0x0080,
+        DpadLeft = 0x0002,
+        DpadDown = 0x0004,
+        DpadUp = 0x0008,
+        Start = 0x0010,
+        Z = 0x0020,
+        B = 0x0040,
+        A = 0x0080,
 
-        CRight    = 0x0100,
-        CLeft     = 0x0200,
-        CDown     = 0x0400,
-        CUp       = 0x0800,
+        CRight = 0x0100,
+        CLeft = 0x0200,
+        CDown = 0x0400,
+        CUp = 0x0800,
 
-        R         = 0x1000,
-        L         = 0x2000,
+        R = 0x1000,
+        L = 0x2000,
     };
 
     enum Axises : size_t
@@ -46,29 +46,34 @@ namespace N64
 
     using IButton = ControllerInterface::Button<Buttons>;
     class Button final : public IModifier
-                       , public IButton
+        , public IButton
     {
 
     public:
         Button(Buttons);
 
-        virtual std::optional<std::string> ToString() const override;
+        virtual std::optional<Simple::ToButton> ToSimpleButton() const override;
         virtual void Alter(Controller&) const override;
     };
 
     using IAxis = ControllerInterface::Axis<char, Axises>;
     class Axis final : public IModifier
-                     , public IAxis
+        , public IAxis
     {
     public:
         Axis(Axises, signed value);
 
-        virtual std::optional<std::string> ToString() const override;
+        virtual std::optional<Simple::ToButton> ToSimpleButton() const override;
         virtual void Alter(Controller&) const override;
     };
 
     using AxisPtr = std::shared_ptr<Axis>;
-    using AxisConverter = ControllerInterface::LinearConverter<Axises, char>;
+    class AxisConverter final : public ControllerInterface::LinearConverter<Axises, char>
+    {
+    public:
+        using ControllerInterface::LinearConverter<Axises, char>::LinearConverter;
+        std::optional<uint8_t> ToSimpleRangeTo() const;
+    };
 }
 
 namespace YAML
@@ -109,5 +114,12 @@ namespace YAML
     struct convert<N64::AxisPtr>
     {
         static bool decode(const Node& node, N64::AxisPtr&);
+    };
+
+    template<>
+    struct convert<N64::AxisConverter>
+    {
+        static Node encode(const N64::AxisConverter&);
+        static bool decode(const Node& node, N64::AxisConverter&);
     };
 }

@@ -104,7 +104,7 @@
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -145,7 +145,7 @@
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -197,12 +197,14 @@
     <ClInclude Include="Mapper\GenericController.h" />
     <ClInclude Include="Mapper\Group.h" />
     <ClInclude Include="Mapper\Keyboard.h" />
+    <ClInclude Include="Mapper\KeyboardXMacro.h" />
     <ClInclude Include="Mapper\Luna.h" />
     <ClInclude Include="Mapper\Mapping.h" />
     <ClInclude Include="Mapper\MappingImpl.h" />
     <ClInclude Include="Mapper\N64Controller.h" />
     <ClInclude Include="Mapper\Serialization.h" />
     <ClInclude Include="Mapper\SerializationImpl.h" />
+    <ClInclude Include="Mapper\SimpleConfig.h" />
     <ClInclude Include="Mapper\Switch.h" />
     <ClInclude Include="Mapper\utils.h" />
     <ClInclude Include="Mapper\X360Controller.h" />

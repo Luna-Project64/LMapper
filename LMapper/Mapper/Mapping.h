@@ -10,37 +10,29 @@
 #include "ControllerInterface.h"
 #include "X360Controller.h"
 #include "N64Controller.h"
+#include "SimpleConfig.h"
 
 namespace Mapping
 {
     class IMapper : public Serialization::ISerializable
     {
     public:
-        struct StringDescription
-        {
-            std::string type;
-            std::string from;
-            std::string to;
-        };
-
-        virtual std::optional<StringDescription> ToString() const = 0;
+        virtual std::optional<Simple::Config> ToSimpleConfig() const = 0;
         virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) = 0;
     };
     using IMapperPtr = std::shared_ptr<IMapper>;
 
     namespace Analog
     {
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
+        template<typename FromConverter, typename ToConverter>
         class LinearMapper final : public IMapper
         {
         public:
             using Deadzoner = std::optional<ControllerInterface::Deadzoner>;
-            using FromConverter = ControllerInterface::LinearConverter<FromOffsetT, FromStickT>;
-            using ToConverter = ControllerInterface::LinearConverter<ToOffsetT, ToStickT>;
 
             LinearMapper(FromConverter, ToConverter, Deadzoner);
 
-            virtual std::optional<StringDescription> ToString() const override;
+            virtual std::optional<Simple::Config> ToSimpleConfig() const override;
             virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) override;
             virtual YAML::Node Serialize() const override;
 
@@ -52,20 +44,18 @@ namespace Mapping
             const Deadzoner deadzoner_;
         };
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
+        template<typename FromConverter, typename ToConverter>
         class BilinearMapper final : public IMapper
         {
         public:
-            using AngleLimiter      = std::optional<ControllerInterface::AngleDeadzoner>;
-            using Stretcher         = std::optional<ControllerInterface::BilinearDiagonalStretcher>;
-            using Deadzoner         = std::optional<ControllerInterface::Deadzoner>;
+            using AngleLimiter = std::optional<ControllerInterface::AngleDeadzoner>;
+            using Stretcher = std::optional<ControllerInterface::BilinearDiagonalStretcher>;
+            using Deadzoner = std::optional<ControllerInterface::Deadzoner>;
             using BilinearDeadzoner = std::optional<ControllerInterface::BilinearDeadzoner>;
-            using FromConverter     = ControllerInterface::LinearConverter<FromOffsetT, FromStickT>;
-            using ToConverter       = ControllerInterface::LinearConverter<ToOffsetT, ToStickT>;
 
             BilinearMapper(FromConverter fX, FromConverter fY, ToConverter tX, ToConverter tY, Stretcher, Deadzoner, BilinearDeadzoner, AngleLimiter);
-            
-            virtual std::optional<StringDescription> ToString() const override;
+
+            virtual std::optional<Simple::Config> ToSimpleConfig() const override;
             virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) override;
             virtual YAML::Node Serialize() const override;
 
@@ -80,16 +70,17 @@ namespace Mapping
             const AngleLimiter angleDeadzone_;
         };
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        using LinearMapperPtr = std::shared_ptr<LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>>;
+        template<typename FromConverter, typename ToConverter>
+        using LinearMapperPtr = std::shared_ptr<LinearMapper<FromConverter, ToConverter>>;
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        using BilinearMapperPtr = std::shared_ptr<BilinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>>;
+        template<typename FromConverter, typename ToConverter>
+        using BilinearMapperPtr = std::shared_ptr<BilinearMapper<FromConverter, ToConverter>>;
 
-        using LinearTriggerMapper = LinearMapper<X360::Triggers, BYTE, N64::Axises, char>;
-        using BilinearTriggerMapper = BilinearMapper<X360::Triggers, BYTE, N64::Axises, char>;
-        using LinearStickMapper = LinearMapper<X360::Thumbs, SHORT, N64::Axises, char>;
-        using BilinearStickMapper = BilinearMapper<X360::Thumbs, SHORT, N64::Axises, char>;
+        using LinearTriggerMapper = LinearMapper<X360::TriggersConverter, N64::AxisConverter>;
+        // TODO: Probably useless? Why is it even needed?
+        using BilinearTriggerMapper = BilinearMapper<X360::TriggersConverter, N64::AxisConverter>;
+        using LinearStickMapper = LinearMapper<X360::ThumbsConverter, N64::AxisConverter>;
+        using BilinearStickMapper = BilinearMapper<X360::ThumbsConverter, N64::AxisConverter>;
 
         using LinearTriggerMapperPtr = std::shared_ptr<LinearTriggerMapper>;
         using BilinearTriggerMapperPtr = std::shared_ptr<BilinearTriggerMapper>;
@@ -104,7 +95,7 @@ namespace Mapping
         public:
             Mapper(X360::IEventPtr from, N64::IModifierPtr to);
 
-            virtual std::optional<StringDescription> ToString() const override;
+            virtual std::optional<Simple::Config> ToSimpleConfig() const override;
             virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) override;
             virtual YAML::Node Serialize() const override;
 
@@ -129,16 +120,16 @@ namespace YAML
         static bool decode(const Node& node, Mapping::IMapperPtr&);
     };
 
-    template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-    struct convert<Mapping::Analog::LinearMapperPtr<FromOffsetT, FromStickT, ToOffsetT, ToStickT>>
+    template<typename FromConverter, typename ToConverter>
+    struct convert<Mapping::Analog::LinearMapperPtr<FromConverter, ToConverter>>
     {
-        static bool decode(const Node& node, Mapping::Analog::LinearMapperPtr<FromOffsetT, FromStickT, ToOffsetT, ToStickT>&);
+        static bool decode(const Node& node, Mapping::Analog::LinearMapperPtr<FromConverter, ToConverter>&);
     };
 
-    template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-    struct convert<Mapping::Analog::BilinearMapperPtr<FromOffsetT, FromStickT, ToOffsetT, ToStickT>>
+    template<typename FromConverter, typename ToConverter>
+    struct convert<Mapping::Analog::BilinearMapperPtr<FromConverter, ToConverter>>
     {
-        static bool decode(const Node& node, Mapping::Analog::BilinearMapperPtr<FromOffsetT, FromStickT, ToOffsetT, ToStickT>&);
+        static bool decode(const Node& node, Mapping::Analog::BilinearMapperPtr<FromConverter, ToConverter>&);
     };
 
     template<>

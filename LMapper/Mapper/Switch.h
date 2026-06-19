@@ -18,7 +18,7 @@ namespace Mapping
         Switcher() = default;
         Switcher(SwitchCondition cond, X360::IEventPtr event_, std::vector<IMapperPtr> mappers);
 
-        virtual std::optional<StringDescription> ToString() const override;
+        virtual std::optional<Simple::Config> ToSimpleConfig() const;
         virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) override;
         virtual YAML::Node Serialize() const;
 

@@ -8,7 +8,7 @@
 namespace ControllerInterface
 {
     template<typename T>
-    AxisComparer<T>::AxisComparer(Type t) : type_(t) { }
+    AxisComparer<T>::AxisComparer(Type t) : type_(t) {}
 
     template<typename T>
     YAML::Node AxisComparer<T>::Serialize() const
@@ -31,7 +31,7 @@ namespace ControllerInterface
     }
 
     template<typename ButtonT>
-    Button<ButtonT>::Button(ButtonT button) : button_(button) { }
+    Button<ButtonT>::Button(ButtonT button) : button_(button) {}
 
     template<typename ButtonT>
     YAML::Node Button<ButtonT>::Serialize() const
@@ -60,7 +60,7 @@ namespace ControllerInterface
     }
 
     template<typename AxisT, typename OffsetT>
-    Axis<AxisT, OffsetT>::Axis(AxisT axis, OffsetT offset) : axis_(axis), offset_(offset) { }
+    Axis<AxisT, OffsetT>::Axis(AxisT axis, OffsetT offset) : axis_(axis), offset_(offset) {}
 
     template<typename AxisT, typename OffsetT>
     YAML::Node Axis<AxisT, OffsetT>::Serialize() const
@@ -84,7 +84,7 @@ namespace ControllerInterface
     }
 
     template<typename AxisT, typename OffsetT>
-    AxisEvent<AxisT, OffsetT>::AxisEvent(AxisT axis, AxisComparerType compar, OffsetT offset) : axis_(axis), offset_(offset), comparer_(compar) { }
+    AxisEvent<AxisT, OffsetT>::AxisEvent(AxisT axis, AxisComparerType compar, OffsetT offset) : axis_(axis), offset_(offset), comparer_(compar) {}
 
     template<typename AxisT, typename OffsetT>
     YAML::Node AxisEvent<AxisT, OffsetT>::Serialize() const
@@ -110,12 +110,7 @@ namespace ControllerInterface
 
     template<typename OffsetT, typename StickT>
     LinearConverter<OffsetT, StickT>::LinearConverter(OffsetT offset, StickT center, StickT max)
-        : offset_(offset), center_(center), maxval_(max) { }
-
-    template<typename OffsetT, typename StickT>
-    std::optional<std::string> LinearConverter<OffsetT, StickT>::ToString() const
-    {
-        return ControllerInterface::toOffsetString<OffsetT>(offset_);
+        : offset_(offset), center_(center), maxval_(max) {
     }
 
     template<typename OffsetT, typename StickT>
@@ -141,7 +136,7 @@ namespace ControllerInterface
     }
 
     template<size_t SIZE>
-    void Deadzoner::Apply(float (&arr)[SIZE]) const
+    void Deadzoner::Apply(float(&arr)[SIZE]) const
     {
         float sum = 0;
         for (int i = 0; i < SIZE; i++)
@@ -189,7 +184,8 @@ namespace YAML
     }
 
     template<typename OffsetT, typename StickT>
-    bool convert<ControllerInterface::LinearConverter<OffsetT, StickT>>::decode(const Node& node, ControllerInterface::LinearConverter<OffsetT, StickT>& conv)
+    template<typename I>
+    bool convert<ControllerInterface::LinearConverter<OffsetT, StickT>>::decode(const Node& node, I& conv)
     {
         if (!node.IsMap())
             return false;
@@ -201,11 +197,11 @@ namespace YAML
         if (!centerNode || !maxNode || !offsetNode)
             return false;
 
-        auto center = (StickT) centerNode.as<int>();
-        auto maxval = (StickT) maxNode.as<int>();
+        auto center = (StickT)centerNode.as<int>();
+        auto maxval = (StickT)maxNode.as<int>();
         auto offset = offsetNode.as<OffsetT>();
 
-        conv = ControllerInterface::LinearConverter<OffsetT, StickT>(offset, center, maxval);
+        conv = I(offset, center, maxval);
         return true;
     }
 }

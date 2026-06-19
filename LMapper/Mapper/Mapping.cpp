@@ -11,23 +11,19 @@ namespace Mapping
 {
     namespace Digital
     {
-        Mapper::Mapper(X360::IEventPtr from, N64::IModifierPtr to) : event_(from), modifier_(to) { }
+        Mapper::Mapper(X360::IEventPtr from, N64::IModifierPtr to) : event_(from), modifier_(to) {}
 
-        std::optional<IMapper::StringDescription> Mapper::ToString() const
+        std::optional<Simple::Config> Mapper::ToSimpleConfig() const
         {
-			auto eventDesc = event_->ToString();
+            auto eventDesc = event_->ToSimpleButton();
             if (!eventDesc)
                 return std::nullopt;
 
-			auto modifierDesc = modifier_->ToString();
+            auto modifierDesc = modifier_->ToSimpleButton();
             if (!modifierDesc)
-				return std::nullopt;
+                return std::nullopt;
 
-            return StringDescription {
-                "digital",
-                *eventDesc,
-                *modifierDesc
-			};
+            return Simple::ButtonMapping{ .from = *eventDesc, .to = *modifierDesc };
         }
 
         void Mapper::Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to)

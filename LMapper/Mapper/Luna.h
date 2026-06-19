@@ -14,7 +14,7 @@ namespace Luna
     public:
         Cmd(LunaExCommand);
 
-        virtual std::optional<std::string> ToString() const override;
+        virtual std::optional<Simple::ToButton> ToSimpleButton() const override;
         virtual void Alter(N64::Controller&) const override;
         virtual YAML::Node Serialize() const override;
 

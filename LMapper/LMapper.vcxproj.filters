@@ -147,6 +147,12 @@
     <ClInclude Include="WTL\atlwinx.h">
       <Filter>Header Files\WTL</Filter>
     </ClInclude>
+    <ClInclude Include="Mapper\SimpleConfig.h">
+      <Filter>Header Files\Mapper</Filter>
+    </ClInclude>
+    <ClInclude Include="Mapper\KeyboardXMacro.h">
+      <Filter>Source Files\Mapper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

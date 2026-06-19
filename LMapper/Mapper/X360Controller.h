@@ -20,60 +20,60 @@ namespace X360
     // Must represent the offsets in buttons
     enum Buttons : USHORT
     {
-        DpadUp        = 0x0001,
-        DpadDown      = 0x0002,
-        DpadLeft      = 0x0004,
-        DpadRight     = 0x0008,
-        Start         = 0x0010,
-        Back          = 0x0020,
-        LeftThumb     = 0x0040,
-        RightThumb    = 0x0080,
-        L             = 0x0100,
-        R             = 0x0200,
-        Guide         = 0x0400,
-        A             = 0x1000,
-        B             = 0x2000,
-        X             = 0x4000,
-        Y             = 0x8000,
+        DpadUp = 0x0001,
+        DpadDown = 0x0002,
+        DpadLeft = 0x0004,
+        DpadRight = 0x0008,
+        Start = 0x0010,
+        Back = 0x0020,
+        LeftThumb = 0x0040,
+        RightThumb = 0x0080,
+        L = 0x0100,
+        R = 0x0200,
+        Guide = 0x0400,
+        A = 0x1000,
+        B = 0x2000,
+        X = 0x4000,
+        Y = 0x8000,
     };
 
     enum Thumbs : size_t
     {
-        LeftX  = offsetof(Controller, sThumbLX),
-        LeftY  = offsetof(Controller, sThumbLY),
+        LeftX = offsetof(Controller, sThumbLX),
+        LeftY = offsetof(Controller, sThumbLY),
         RightX = offsetof(Controller, sThumbRX),
         RightY = offsetof(Controller, sThumbRY),
     };
 
     enum Triggers : size_t
     {
-        LeftTrigger  = offsetof(Controller, bLeftTrigger),
+        LeftTrigger = offsetof(Controller, bLeftTrigger),
         RightTrigger = offsetof(Controller, bRightTrigger),
     };
 
     using IButton = ControllerInterface::Button<Buttons>;
     class Button final : public IEvent
-                       , public IButton
+        , public IButton
     {
 
     public:
         Button(Buttons);
 
-        virtual std::optional<std::string> ToString() const override;
+        virtual std::optional<Simple::FromButton> ToSimpleButton() const override;
         virtual bool Happened(const Controller&, const std::atomic_bool*) const;
     };
 
     template<typename AxisT, typename OffsetT>
     using IAxis = ControllerInterface::AxisEvent<AxisT, OffsetT>;
-    
+
     template<typename AxisT, typename OffsetT>
     class Axis : public IEvent
-               , public IAxis<AxisT, OffsetT>
+        , public IAxis<AxisT, OffsetT>
     {
     public:
         Axis(IAxis<AxisT, OffsetT> me);
 
-        virtual std::optional<std::string> ToString() const override;
+        virtual std::optional<Simple::FromButton> ToSimpleButton() const override;
         virtual bool Happened(const Controller&, const std::atomic_bool*) const;
     };
 
@@ -95,8 +95,18 @@ namespace X360
     };
     using TriggerPtr = std::shared_ptr<Trigger>;
 
-    using ThumbsConverter = ControllerInterface::LinearConverter<X360::Thumbs, SHORT>;
-    using TriggersConverter = ControllerInterface::LinearConverter<X360::Triggers, BYTE>;
+    class ThumbsConverter final : public ControllerInterface::LinearConverter<X360::Thumbs, SHORT>
+    {
+    public:
+        using ControllerInterface::LinearConverter<X360::Thumbs, SHORT>::LinearConverter;
+        std::optional<Simple::StickAxis> ToSimpleStickFrom() const;
+    };
+    class TriggersConverter final : public ControllerInterface::LinearConverter<X360::Triggers, BYTE>
+    {
+    public:
+        using ControllerInterface::LinearConverter<X360::Triggers, BYTE>::LinearConverter;
+        std::optional<Simple::StickAxis> ToSimpleStickFrom() const;
+    };
 }
 
 namespace YAML
@@ -157,4 +167,19 @@ namespace YAML
     {
         static bool decode(const Node& node, X360::TriggerPtr&);
     };
+
+    template<>
+    struct convert<X360::ThumbsConverter>
+    {
+        static Node encode(const X360::ThumbsConverter&);
+        static bool decode(const Node& node, X360::ThumbsConverter&);
+    };
+
+    template<>
+    struct convert<X360::TriggersConverter>
+    {
+        static Node encode(const X360::TriggersConverter&);
+        static bool decode(const Node& node, X360::TriggersConverter&);
+    };
+
 }

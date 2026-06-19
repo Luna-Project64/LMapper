@@ -2,184 +2,12 @@
 #include "ControllerInterfaceImpl.h"
 #include "SerializationImpl.h"
 
-#define KEYS \
-ENUMSTR(KeyLButton) \
-ENUMSTR(KeyRButton) \
-ENUMSTR(KeyCancel) \
-ENUMSTR(KeyMButton) \
-ENUMSTR(KeyXButton1) \
-ENUMSTR(KeyXButton2) \
-ENUMSTR(KeyBack) \
-ENUMSTR(KeyTab) \
-ENUMSTR(KeyClear) \
-ENUMSTR(KeyReturn) \
-ENUMSTR(KeyShift) \
-ENUMSTR(KeyControl) \
-ENUMSTR(KeyMenu) \
-ENUMSTR(KeyPause) \
-ENUMSTR(KeyCapital) \
-ENUMSTR(KeyHangul) \
-ENUMSTR(KeyImeOn) \
-ENUMSTR(KeyJunja) \
-ENUMSTR(KeyFinal) \
-ENUMSTR(KeyKanji) \
-ENUMSTR(KeyImeOff) \
-ENUMSTR(KeyEscape) \
-ENUMSTR(KeyConvert) \
-ENUMSTR(KeyNonConvert) \
-ENUMSTR(KeyAccept) \
-ENUMSTR(KeyModeChange) \
-ENUMSTR(KeySpace) \
-ENUMSTR(KeyPrior) \
-ENUMSTR(KeyNext) \
-ENUMSTR(KeyEnd) \
-ENUMSTR(KeyHome) \
-ENUMSTR(KeyLeft) \
-ENUMSTR(KeyUp) \
-ENUMSTR(KeyRight) \
-ENUMSTR(KeyDown) \
-ENUMSTR(KeySelect) \
-ENUMSTR(KeyPrint) \
-ENUMSTR(KeyExecute) \
-ENUMSTR(KeySnapshot) \
-ENUMSTR(KeyInsert) \
-ENUMSTR(KeyDelete) \
-ENUMSTR(KeyHelp) \
-ENUMSTR(Key0) \
-ENUMSTR(Key1) \
-ENUMSTR(Key2) \
-ENUMSTR(Key3) \
-ENUMSTR(Key4) \
-ENUMSTR(Key5) \
-ENUMSTR(Key6) \
-ENUMSTR(Key7) \
-ENUMSTR(Key8) \
-ENUMSTR(Key9) \
-ENUMSTR(KeyA) \
-ENUMSTR(KeyB) \
-ENUMSTR(KeyC) \
-ENUMSTR(KeyD) \
-ENUMSTR(KeyE) \
-ENUMSTR(KeyF) \
-ENUMSTR(KeyG) \
-ENUMSTR(KeyH) \
-ENUMSTR(KeyI) \
-ENUMSTR(KeyJ) \
-ENUMSTR(KeyK) \
-ENUMSTR(KeyL) \
-ENUMSTR(KeyM) \
-ENUMSTR(KeyN) \
-ENUMSTR(KeyO) \
-ENUMSTR(KeyP) \
-ENUMSTR(KeyQ) \
-ENUMSTR(KeyR) \
-ENUMSTR(KeyS) \
-ENUMSTR(KeyT) \
-ENUMSTR(KeyU) \
-ENUMSTR(KeyV) \
-ENUMSTR(KeyW) \
-ENUMSTR(KeyX) \
-ENUMSTR(KeyY) \
-ENUMSTR(KeyZ) \
-ENUMSTR(KeyLWin) \
-ENUMSTR(KeyRWin) \
-ENUMSTR(KeyApps) \
-ENUMSTR(KeySleep) \
-ENUMSTR(KeyNumPad0) \
-ENUMSTR(KeyNumPad1) \
-ENUMSTR(KeyNumPad2) \
-ENUMSTR(KeyNumPad3) \
-ENUMSTR(KeyNumPad4) \
-ENUMSTR(KeyNumPad5) \
-ENUMSTR(KeyNumPad6) \
-ENUMSTR(KeyNumPad7) \
-ENUMSTR(KeyNumPad8) \
-ENUMSTR(KeyNumPad9) \
-ENUMSTR(KeyMultiply) \
-ENUMSTR(KeyAdd) \
-ENUMSTR(KeySeparator) \
-ENUMSTR(KeySubstract) \
-ENUMSTR(KeyDecimal) \
-ENUMSTR(KeyDivide) \
-ENUMSTR(KeyF1) \
-ENUMSTR(KeyF2) \
-ENUMSTR(KeyF3) \
-ENUMSTR(KeyF4) \
-ENUMSTR(KeyF5) \
-ENUMSTR(KeyF6) \
-ENUMSTR(KeyF7) \
-ENUMSTR(KeyF8) \
-ENUMSTR(KeyF9) \
-ENUMSTR(KeyF10) \
-ENUMSTR(KeyF11) \
-ENUMSTR(KeyF12) \
-ENUMSTR(KeyF13) \
-ENUMSTR(KeyF14) \
-ENUMSTR(KeyF15) \
-ENUMSTR(KeyF16) \
-ENUMSTR(KeyF17) \
-ENUMSTR(KeyF18) \
-ENUMSTR(KeyF19) \
-ENUMSTR(KeyF20) \
-ENUMSTR(KeyF21) \
-ENUMSTR(KeyF22) \
-ENUMSTR(KeyF23) \
-ENUMSTR(KeyF24) \
-ENUMSTR(KeyNumlock) \
-ENUMSTR(KeyScroll) \
-ENUMSTR(KeyLShift) \
-ENUMSTR(KeyRShift) \
-ENUMSTR(KeyLControl) \
-ENUMSTR(KeyRControl) \
-ENUMSTR(KeyLMenu) \
-ENUMSTR(KeyRMenu) \
-ENUMSTR(KeyBrowserBack) \
-ENUMSTR(KeyBrowserForward) \
-ENUMSTR(KeyBrowserRefresh) \
-ENUMSTR(KeyBrowserStop) \
-ENUMSTR(KeyBrowserSearch) \
-ENUMSTR(KeyBrowserFavorites) \
-ENUMSTR(KeyBrowserHome) \
-ENUMSTR(KeyVolumeMute) \
-ENUMSTR(KeyVolumeDown) \
-ENUMSTR(KeyVolumeUp) \
-ENUMSTR(KeyMediaNextTrack) \
-ENUMSTR(KeyMediaPrevTrack) \
-ENUMSTR(KeyMediaStop) \
-ENUMSTR(KeyMediaPlayPause) \
-ENUMSTR(KeyLaunchMail) \
-ENUMSTR(KeyLaunchMediaSelect) \
-ENUMSTR(KeyLaunchApp1) \
-ENUMSTR(KeyLaunchApp2) \
-ENUMSTR(KeyColon) \
-ENUMSTR(KeyPlus) \
-ENUMSTR(KeyComma) \
-ENUMSTR(KeyMinus) \
-ENUMSTR(KeyPeriod) \
-ENUMSTR(KeySlash) \
-ENUMSTR(KeyTilde) \
-ENUMSTR(KeyBracketOpen) \
-ENUMSTR(KeyBracketPipe) \
-ENUMSTR(KeyBracketClose) \
-ENUMSTR(KeyQuote) \
-ENUMSTR(KeyPipeUS) \
-ENUMSTR(KeyProcessKey) \
-ENUMSTR(KeyPacket) \
-ENUMSTR(KeyAttn) \
-ENUMSTR(KeyCrsel) \
-ENUMSTR(KeyExsel) \
-ENUMSTR(KeyEreof) \
-ENUMSTR(KeyPlay) \
-ENUMSTR(KeyZoom) \
-ENUMSTR(KeyNoName) \
-ENUMSTR(KeyPA1) 
-
 namespace YAML
 {
     const std::map<std::string, Keyboard::Buttons> convert<Keyboard::Buttons>::names
     {
 #define ENUMSTR(name) { #name, Keyboard::Buttons::name },
-        KEYS
+#include "KeyboardXMacro.h"
 #undef ENUMSTR
     };
 
@@ -203,12 +31,12 @@ namespace Keyboard
         return Applied(keyboard);
     }
 
-    std::optional<std::string> Button::ToString() const
+    std::optional<Simple::FromButton> Button::ToSimpleButton() const
     {
         switch (button_)
         {
-#define ENUMSTR(name) case Keyboard::Buttons::name: return #name;
-			KEYS
+#define ENUMSTR(name) case Keyboard::Buttons::name: return Simple::FromButton::name;
+#include "KeyboardXMacro.h"
 #undef ENUMSTR
         }
 

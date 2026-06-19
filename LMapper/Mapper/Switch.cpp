@@ -9,7 +9,7 @@ namespace Mapping
         , mappers_(std::move(m))
     { }
 
-    std::optional<IMapper::StringDescription> Switcher::ToString() const
+    std::optional<Simple::Config> Switcher::ToSimpleConfig() const
     {
         return std::nullopt;
     }

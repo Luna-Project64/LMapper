@@ -7,7 +7,7 @@ namespace Mapping
         : mappers_(std::move(m))
     { }
 
-    std::optional<IMapper::StringDescription> Group::ToString() const
+    std::optional<Simple::Config> Group::ToSimpleConfig() const
     {
         return std::nullopt;
     }

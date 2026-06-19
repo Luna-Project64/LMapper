@@ -2,6 +2,7 @@
 
 #include "utils.h"
 #include "Serialization.h"
+#include "SimpleConfig.h"
 
 #include <map>
 #include <memory>
@@ -11,6 +12,17 @@
 namespace YAML
 {
     class Node;
+}
+
+namespace Simple
+{
+    enum class StickAxis
+    {
+        LeftX,
+        RightX,
+        LeftY,
+        RightY,
+    };
 }
 
 namespace ControllerInterface
@@ -24,7 +36,7 @@ namespace ControllerInterface
         virtual YAML::Node Serialize() const override;
 
         template<typename HolderT>
-        void Apply  (HolderT& controller) const;
+        void Apply(HolderT& controller) const;
 
         template<typename HolderT>
         bool Applied(const HolderT& controller) const;
@@ -54,9 +66,6 @@ namespace ControllerInterface
 
         const Type type_;
     };
-
-    template<typename AxisT>
-    std::optional<std::string> toOffsetString(size_t);
 
     // OffsetT must have size_t as a Base
     template<typename AxisT, typename OffsetT>
@@ -94,7 +103,7 @@ namespace ControllerInterface
     class IEvent : public virtual Serialization::ISerializable
     {
     public:
-        virtual std::optional<std::string> ToString() const = 0;
+        virtual std::optional<Simple::FromButton> ToSimpleButton() const = 0;
         virtual bool Happened(const ControllerT&, const std::atomic_bool* keyboard) const = 0;
     };
 
@@ -102,7 +111,7 @@ namespace ControllerInterface
     class IModifier : public virtual Serialization::ISerializable
     {
     public:
-        virtual std::optional<std::string> ToString() const = 0;
+        virtual std::optional<Simple::ToButton> ToSimpleButton() const = 0;
         virtual void Alter(ControllerT&) const = 0;
     };
 
@@ -112,15 +121,20 @@ namespace ControllerInterface
     template<typename ControllerT>
     using IModifierPtr = std::shared_ptr<IModifier<ControllerT>>;
 
+    enum class SimpleStick
+    {
+        Left,
+        Right,
+    };
+
     // Converter from anything to [-1; 1] floating point axis
     template<typename OffsetT, typename StickT>
-    class LinearConverter final : public Serialization::ISerializable
+    class LinearConverter : public Serialization::ISerializable
     {
     public:
         LinearConverter() = default;
         LinearConverter(OffsetT offset, StickT center, StickT max);
 
-        std::optional<std::string> ToString() const;
         StickT* Get(void* ptr) const { return fieldin(ptr, StickT, offset_); }
         const StickT* Get(const void* ptr) const { return fieldin(ptr, const StickT, offset_); }
 
@@ -149,6 +163,7 @@ namespace ControllerInterface
         void Stretch(float&, float&) const;
 
         virtual YAML::Node Serialize() const override;
+        std::optional<float> GetSimpleSlope() const;
 
     protected:
         float fromSlope_;
@@ -165,9 +180,10 @@ namespace ControllerInterface
         void Apply(float&) const;
 
         template<size_t SIZE>
-        void Apply(float (&arr)[SIZE]) const;
+        void Apply(float(&arr)[SIZE]) const;
 
         virtual YAML::Node Serialize() const override;
+        float GetSize() const { return size_; }
 
     protected:
         float size_;
@@ -204,6 +220,9 @@ namespace ControllerInterface
         void Apply(float(&arr)[2]) const;
 
         virtual YAML::Node Serialize() const override;
+
+        std::optional<bool> UsesSimple8Dir() const;
+        float GetSize() const { return size_; }
 
     protected:
         int count_;
@@ -245,7 +264,8 @@ namespace YAML
     struct convert<ControllerInterface::LinearConverter<T, S>>
     {
         static Node encode(const ControllerInterface::LinearConverter<T, S>&);
-        static bool decode(const Node& node, ControllerInterface::LinearConverter<T, S>&);
+        template<typename I>
+        static bool decode(const Node& node, I&);
     };
 
     template<>

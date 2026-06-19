@@ -8,25 +8,19 @@ namespace Mapping
 {
     namespace Analog
     {
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::LinearMapper(FromConverter from, ToConverter to, Deadzoner dz) : fromConverter_(from), toConverter_(to), deadzoner_(dz) { }
+        template<typename FromConverter, typename ToConverter>
+        LinearMapper<FromConverter, ToConverter>::LinearMapper(FromConverter from, ToConverter to, Deadzoner dz) : fromConverter_(from), toConverter_(to), deadzoner_(dz) { }
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        std::optional<IMapper::StringDescription> LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::ToString() const
+        template<typename FromConverter, typename ToConverter>
+        std::optional<Simple::Config> LinearMapper<FromConverter, ToConverter>::ToSimpleConfig() const
         {
-			auto fromDesc = fromConverter_.ToString();
-            if (!fromDesc)
-				return std::nullopt;
-
-			auto toDesc = toConverter_.ToString();
-			if (!toDesc)
-				return std::nullopt;
-
-            return StringDescription{ "linear", *fromDesc, *toDesc };
+            // There is no simple config for linear mapping because n64 does not have any triggers.
+            // We assume that the only mapping for axis is going to be the stick itself.
+            return std::nullopt;
         }
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        void LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::Map(const X360::Controller& from, const std::atomic_bool*, N64::Controller& to)
+        template<typename FromConverter, typename ToConverter>
+        void LinearMapper<FromConverter, ToConverter>::Map(const X360::Controller& from, const std::atomic_bool*, N64::Controller& to)
         {
             auto fromValPtr = fromConverter_.Get(&from);
             auto toValPtr = toConverter_.Get(&to);
@@ -39,11 +33,11 @@ namespace Mapping
             *toValPtr = toValConv;
         }
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        const std::string LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::name_ = "linear";
+        template<typename FromConverter, typename ToConverter>
+        const std::string LinearMapper<FromConverter, ToConverter>::name_ = "linear";
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        YAML::Node LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::Serialize() const
+        template<typename FromConverter, typename ToConverter>
+        YAML::Node LinearMapper<FromConverter, ToConverter>::Serialize() const
         {
             YAML::Node node;
             node["type"] = name_;
@@ -54,30 +48,78 @@ namespace Mapping
             return node;
         }
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        std::optional<IMapper::StringDescription> BilinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::ToString() const
+        static std::optional<Simple::FromStick> toSimpleFromStick(Simple::StickAxis x, Simple::StickAxis y)
         {
-			auto fromXDesc = fromConverters_[0].ToString();
+            if (x == Simple::StickAxis::LeftX && y == Simple::StickAxis::LeftY)
+				return Simple::FromStick::Left;
+
+            if (x == Simple::StickAxis::RightX && y == Simple::StickAxis::RightY)
+                return Simple::FromStick::Right;
+
+            return std::nullopt;
+		}
+
+        template<typename FromConverter, typename ToConverter>
+        std::optional<Simple::Config> BilinearMapper<FromConverter, ToConverter>::ToSimpleConfig() const
+        {
+            if (bilinearDeadzoner_)
+                return std::nullopt;
+
+			auto fromXDesc = fromConverters_[0].ToSimpleStickFrom();
             if (!fromXDesc)
 				return std::nullopt;
 
-            auto fromYDesc = fromConverters_[1].ToString();
+            auto fromYDesc = fromConverters_[1].ToSimpleStickFrom();
 			if (!fromYDesc)
 				return std::nullopt;
 
-            auto toXDesc = toConverters_[0].ToString();
+            auto toXDesc = toConverters_[0].ToSimpleRangeTo();
 			if (!toXDesc)
                 return std::nullopt;
 
-			auto toYDesc = toConverters_[1].ToString();
+			auto toYDesc = toConverters_[1].ToSimpleRangeTo();
             if (!toYDesc)
 				return std::nullopt;
 
-			return IMapper::StringDescription{ "bilinear", *fromXDesc + " & " + *fromYDesc, *toXDesc + " & " + *toYDesc };
+            if (*toXDesc != *toYDesc)
+				return std::nullopt;
+
+			auto stick = toSimpleFromStick(*fromXDesc, *fromYDesc);
+            if (!stick)
+                return std::nullopt;
+
+            float deadzone = 0.f;
+            bool angleDeadzoneWithDiagonals = false;
+            float angleDeadzone = 0.f;
+            float stretcher = 0.f;
+
+            if (deadzoner_)
+            {
+                deadzone = deadzoner_->GetSize();
+            }
+            if (angleDeadzone_)
+            {
+				auto simple8Dir = angleDeadzone_->UsesSimple8Dir();
+                if (!simple8Dir)
+					return std::nullopt;
+
+				angleDeadzoneWithDiagonals = *simple8Dir;
+				angleDeadzone = angleDeadzone_->GetSize();
+            }
+            if (stretcher_)
+            {
+                auto slope = stretcher_->GetSimpleSlope();
+                if (!slope)
+                    return std::nullopt;
+
+                stretcher = *slope;
+            }
+
+            return Simple::StickMapping{ *stick, *toXDesc /*=toYDesc*/, deadzone, angleDeadzoneWithDiagonals, angleDeadzone, stretcher };
         }
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        void BilinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::Map(const X360::Controller& from, const std::atomic_bool*, N64::Controller& to)
+        template<typename FromConverter, typename ToConverter>
+        void BilinearMapper<FromConverter, ToConverter>::Map(const X360::Controller& from, const std::atomic_bool*, N64::Controller& to)
         {
             float tmpValues[2];
             for (int i = 0; i < 2; i++)
@@ -104,16 +146,16 @@ namespace Mapping
             }
         }
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        BilinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::BilinearMapper(FromConverter fX, FromConverter fY, ToConverter tX, ToConverter tY, Stretcher s, Deadzoner d, BilinearDeadzoner bd, AngleLimiter al)
+        template<typename FromConverter, typename ToConverter>
+        BilinearMapper<FromConverter, ToConverter>::BilinearMapper(FromConverter fX, FromConverter fY, ToConverter tX, ToConverter tY, Stretcher s, Deadzoner d, BilinearDeadzoner bd, AngleLimiter al)
             : fromConverters_{ fX, fY }, toConverters_{ tX, tY }, stretcher_(s), deadzoner_(d), bilinearDeadzoner_(bd), angleDeadzone_(al) 
         { }
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        const std::string BilinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::name_ = "bilinear";
+        template<typename FromConverter, typename ToConverter>
+        const std::string BilinearMapper<FromConverter, ToConverter>::name_ = "bilinear";
 
-        template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-        YAML::Node BilinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::Serialize() const
+        template<typename FromConverter, typename ToConverter>
+        YAML::Node BilinearMapper<FromConverter, ToConverter>::Serialize() const
         {
             YAML::Node node;
             node["type"] = name_;
@@ -136,8 +178,8 @@ namespace Mapping
 
 namespace YAML
 {
-    template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-    bool convert<Mapping::Analog::LinearMapperPtr<FromOffsetT, FromStickT, ToOffsetT, ToStickT>>::decode(const Node& node, Mapping::Analog::LinearMapperPtr<FromOffsetT, FromStickT, ToOffsetT, ToStickT>& mapper)
+    template<typename FromConverter, typename ToConverter>
+    bool convert<Mapping::Analog::LinearMapperPtr<FromConverter, ToConverter>>::decode(const Node& node, Mapping::Analog::LinearMapperPtr<FromConverter, ToConverter>& mapper)
     {
         if (!node.IsMap())
             return true;
@@ -153,15 +195,15 @@ namespace YAML
         if (!fromNode || !toNode)
             return false;
         
-        auto from = fromNode.as<Mapping::Analog::LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::FromConverter>();
-        auto to = toNode.as<Mapping::Analog::LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>::ToConverter>();
+        auto from = fromNode.as<FromConverter>();
+        auto to = toNode.as<ToConverter>();
 
-        mapper = std::make_shared<Mapping::Analog::LinearMapper<FromOffsetT, FromStickT, ToOffsetT, ToStickT>>(from, to, deadzoner);
+        mapper = std::make_shared<Mapping::Analog::LinearMapper<FromConverter, ToConverter>>(from, to, deadzoner);
         return true;
     }
 
-    template<typename FromOffsetT, typename FromStickT, typename ToOffsetT, typename ToStickT>
-    bool convert<Mapping::Analog::BilinearMapperPtr<FromOffsetT, FromStickT, ToOffsetT, ToStickT>>::decode(const Node& node, Mapping::Analog::BilinearMapperPtr<FromOffsetT, FromStickT, ToOffsetT, ToStickT>& mapper)
+    template<typename FromConverter, typename ToConverter>
+    bool convert<Mapping::Analog::BilinearMapperPtr<FromConverter, ToConverter>>::decode(const Node& node, Mapping::Analog::BilinearMapperPtr<FromConverter, ToConverter>& mapper)
     {
         if (!node.IsMap())
             return true;
@@ -177,10 +219,10 @@ namespace YAML
         if (!fromXNode || !fromYNode || !toXNode || !toYNode)
             return false;
 
-        auto fromX = fromXNode.as<X360::ThumbsConverter>();
-        auto fromY = fromYNode.as<X360::ThumbsConverter>();
-        auto toX = toXNode.as<N64::AxisConverter>();
-        auto toY = toYNode.as<N64::AxisConverter>();
+        auto fromX = fromXNode.as<FromConverter>();
+        auto fromY = fromYNode.as<FromConverter>();
+        auto toX = toXNode.as<ToConverter>();
+        auto toY = toYNode.as<ToConverter>();
         std::optional<ControllerInterface::BilinearDiagonalStretcher> stretcher;
         if (stretcherNode)
             stretcher = stretcherNode.as<ControllerInterface::BilinearDiagonalStretcher>();

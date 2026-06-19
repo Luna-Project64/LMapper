@@ -18,7 +18,8 @@ namespace ControllerInterface
     BilinearDiagonalStretcher::BilinearDiagonalStretcher(float fromDiagonal, float toDiagonal, float dampingPower)
         : fromSlope_(slope(fromDiagonal))
         , toSlope_(slope(toDiagonal))
-        , power_(dampingPower) { }
+        , power_(dampingPower) {
+    }
 
     void BilinearDiagonalStretcher::Stretch(float& x, float& y) const
     {
@@ -43,6 +44,24 @@ namespace ControllerInterface
         y *= multiplier;
     }
 
+#define EPSILON 0.0001f
+    static bool similar(float a, float b)
+    {
+        return fabs(a - b) < EPSILON;
+    }
+
+    std::optional<float> BilinearDiagonalStretcher::GetSimpleSlope() const
+    {
+        if (!similar(toSlope_, 0.70710678118f)
+            || !similar(power_, 1.f))
+            return std::nullopt;
+
+        if (similar(toSlope_, fromSlope_))
+            return 0.f;
+
+        return fromSlope_;
+    }
+
     YAML::Node BilinearDiagonalStretcher::Serialize() const
     {
         YAML::Node node;
@@ -53,7 +72,8 @@ namespace ControllerInterface
     }
 
     Deadzoner::Deadzoner(float size) : size_(size)
-    { }
+    {
+    }
 
     void Deadzoner::Apply(float& v) const
     {
@@ -75,7 +95,8 @@ namespace ControllerInterface
     }
 
     BilinearDeadzoner::BilinearDeadzoner(AxisDeadzoneSize size[2]) : size_{ size[0], size[1] }
-    { }
+    {
+    }
 
     void BilinearDeadzoner::Apply(float(&arr)[2]) const
     {
@@ -114,12 +135,14 @@ namespace ControllerInterface
     }
 
     AngleDeadzoner::AngleDeadzoner() : size_(0), count_(0)
-    { }
+    {
+    }
 
-    AngleDeadzoner::AngleDeadzoner(int count, float size) 
+    AngleDeadzoner::AngleDeadzoner(int count, float size)
         : count_(count)
         , size_(size)
-    { }
+    {
+    }
 
     void AngleDeadzoner::Apply(float(&arr)[2]) const
     {
@@ -135,6 +158,19 @@ namespace ControllerInterface
             auto r = sqrtf(arr[0] * arr[0] + arr[1] * arr[1]);
             arr[0] = r * cosf(roundedPhi);
             arr[1] = r * sinf(roundedPhi);
+        }
+    }
+
+    std::optional<bool> AngleDeadzoner::UsesSimple8Dir() const
+    {
+        switch (count_)
+        {
+        case 4:
+            return false;
+        case 8:
+            return true;
+        default:
+            return std::nullopt;
         }
     }
 
@@ -201,7 +237,7 @@ namespace YAML
 
         auto size = node.as<float>();
         dz = ControllerInterface::Deadzoner(size);
-        
+
         return true;
     }
 

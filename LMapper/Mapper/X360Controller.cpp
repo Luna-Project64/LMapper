@@ -30,41 +30,12 @@
     ENUMSTR(X) \
     ENUMSTR(Y)
 
-namespace ControllerInterface
-{
-    template<>
-    std::optional<std::string> toOffsetString<X360::Thumbs>(size_t offset)
-    {
-        std::optional<std::string> offsetStr;
-        switch (offset)
-        {
-#define ENUMSTR(name) case X360::Thumbs::name: offsetStr = #name; break;
-            THUMBS
-#undef ENUMSTR
-        }
-        return offsetStr;
-    }
-
-	template<>
-    std::optional<std::string> toOffsetString<X360::Triggers>(size_t offset)
-    {
-        std::optional<std::string> offsetStr;
-        switch (offset)
-        {
-#define ENUMSTR(name) case X360::Triggers::name: offsetStr = #name; break;
-            TRIGGERS
-#undef ENUMSTR
-        }
-        return offsetStr;
-    }
-}
-
 namespace YAML
 {
     const std::map<std::string, X360::Thumbs> convert<X360::Thumbs>::names
     {
 #define ENUMSTR(name) { #name, X360::Thumbs::name },
-		THUMBS
+        THUMBS
 #undef ENUMSTR
     };
 
@@ -233,22 +204,42 @@ namespace YAML
         ptr = std::make_shared<X360::Trigger>(offset, compar, value);
         return true;
     }
+
+    Node convert<X360::ThumbsConverter>::encode(const X360::ThumbsConverter& ptr)
+    {
+        return convert<ControllerInterface::LinearConverter<X360::Thumbs, SHORT>>{}.encode(ptr);
+    }
+
+    bool convert<X360::ThumbsConverter>::decode(const Node& node, X360::ThumbsConverter& ptr)
+    {
+        return convert<ControllerInterface::LinearConverter<X360::Thumbs, SHORT>>{}.decode(node, ptr);
+    }
+
+    Node convert<X360::TriggersConverter>::encode(const X360::TriggersConverter& ptr)
+    {
+        return convert<ControllerInterface::LinearConverter<X360::Triggers, BYTE>>{}.encode(ptr);
+    }
+
+    bool convert<X360::TriggersConverter>::decode(const Node& node, X360::TriggersConverter& ptr)
+    {
+        return convert<ControllerInterface::LinearConverter<X360::Triggers, BYTE>>{}.decode(node, ptr);
+    }
 }
 
 namespace X360
 {
-    Button::Button(Buttons button) : IButton(button) { }
+    Button::Button(Buttons button) : IButton(button) {}
 
     bool Button::Happened(const Controller& c, const std::atomic_bool*) const
     {
         return Applied(c.wButtons);
     }
 
-    std::optional<std::string> Button::ToString() const
+    std::optional<Simple::FromButton> Button::ToSimpleButton() const
     {
         switch (button_)
         {
-#define ENUMSTR(name) case X360::Buttons::name: return #name;
+#define ENUMSTR(name) case X360::Buttons::name: return Simple::FromButton::name;
             BUTTONS
 #undef ENUMSTR
         }
@@ -256,7 +247,7 @@ namespace X360
     }
 
     template<typename AxisT, typename OffsetT>
-    Axis<AxisT, OffsetT>::Axis(IAxis<AxisT, OffsetT> me) : IAxis<AxisT, OffsetT>(me) { }
+    Axis<AxisT, OffsetT>::Axis(IAxis<AxisT, OffsetT> me) : IAxis<AxisT, OffsetT>(me) {}
 
     template<typename AxisT, typename OffsetT>
     bool Axis<AxisT, OffsetT>::Happened(const Controller& c, const std::atomic_bool*) const
@@ -264,34 +255,88 @@ namespace X360
         return IAxis<AxisT, OffsetT>::Applied(&c);
     }
 
-    static std::optional<std::string> toString(const ControllerInterface::AxisComparerType& type)
+    static std::optional<Simple::FromButton> toDirection(const ControllerInterface::AxisComparerType& type, int value, Simple::FromButton hi, Simple::FromButton lo)
     {
-        switch (type)
+        if (type == ControllerInterface::AxisComparerType::Less)
         {
-        case ControllerInterface::AxisComparerType::Less:
-            return "<";
-        case ControllerInterface::AxisComparerType::More:
-            return ">";
+            if (value == -16000)
+                return lo;
+            else
+                return std::nullopt;
+        }
+        else
+        {
+            if (value == 16000)
+                return hi;
+            else
+                return std::nullopt;
+        }
+    }
+
+    template<>
+    std::optional<Simple::FromButton> Axis<SHORT, Thumbs>::ToSimpleButton() const
+    {
+        ControllerInterface::AxisComparerType type = comparer_.type_;
+        switch (offset_)
+        {
+        case Thumbs::LeftX:
+            return toDirection(type, axis_, Simple::FromButton::LeftStickRight, Simple::FromButton::LeftStickLeft);
+        case Thumbs::LeftY:
+            return toDirection(type, axis_, Simple::FromButton::LeftStickUp, Simple::FromButton::LeftStickDown);
+        case Thumbs::RightX:
+            return toDirection(type, axis_, Simple::FromButton::RightStickRight, Simple::FromButton::RightStickLeft);
+        case Thumbs::RightY:
+            return toDirection(type, axis_, Simple::FromButton::RightStickUp, Simple::FromButton::RightStickDown);
         default:
             return std::nullopt;
         }
-	}
+    }
 
-    template<typename AxisT, typename OffsetT>
-    std::optional<std::string> Axis<AxisT, OffsetT>::ToString() const
+    template<>
+    std::optional<Simple::FromButton> Axis<BYTE, Triggers>::ToSimpleButton() const
     {
-        std::optional<std::string> offsetStr = ControllerInterface::toOffsetString<OffsetT>(offset_);
-        if (!offsetStr)
-			return std::nullopt;
-
-		std::optional<std::string> comparerStr = toString(comparer_.type_);
-        if (!comparerStr)
+        if (axis_ != 200)
+            return std::nullopt;
+        if (comparer_.type_ != ControllerInterface::AxisComparerType::More)
             return std::nullopt;
 
-		return *offsetStr + " " + *comparerStr + " " + std::to_string(axis_);
+        switch (offset_)
+        {
+        case Triggers::LeftTrigger:
+            return Simple::FromButton::LeftTrigger;
+        case Triggers::RightTrigger:
+            return Simple::FromButton::RightTrigger;
+        default:
+            return std::nullopt;
+        }
     }
 
     // TODO: Stupid!
-    Thumb::Thumb(Thumbs thumb, ControllerInterface::AxisComparerType compar, SHORT value) : Axis(Intf(value, compar, thumb)) { }
-    Trigger::Trigger(Triggers trigger, ControllerInterface::AxisComparerType compar, BYTE value) : Axis(Intf(value, compar, trigger)) { }
+    Thumb::Thumb(Thumbs thumb, ControllerInterface::AxisComparerType compar, SHORT value) : Axis(Intf(value, compar, thumb)) {}
+    Trigger::Trigger(Triggers trigger, ControllerInterface::AxisComparerType compar, BYTE value) : Axis(Intf(value, compar, trigger)) {}
+
+    std::optional<Simple::StickAxis> ThumbsConverter::ToSimpleStickFrom() const
+    {
+        if (maxval_ != 32000)
+            return std::nullopt;
+
+        switch (offset_)
+        {
+        case Thumbs::LeftX:
+            return Simple::StickAxis::LeftX;
+        case Thumbs::LeftY:
+            return Simple::StickAxis::LeftY;
+        case Thumbs::RightX:
+            return Simple::StickAxis::RightX;
+        case Thumbs::RightY:
+            return Simple::StickAxis::RightY;
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<Simple::StickAxis> TriggersConverter::ToSimpleStickFrom() const
+    {
+        return std::nullopt;
+    }
 }
