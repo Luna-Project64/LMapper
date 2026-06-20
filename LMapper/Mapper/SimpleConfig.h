@@ -4,24 +4,45 @@
 
 namespace Simple
 {
+#define SIMPLE_FROM_BUTTONS_X360 \
+    ENUMSTR(DpadUp) \
+    ENUMSTR(DpadDown) \
+    ENUMSTR(DpadLeft) \
+    ENUMSTR(DpadRight) \
+    ENUMSTR(Start) \
+    ENUMSTR(Back) \
+    ENUMSTR(LeftThumb) \
+    ENUMSTR(RightThumb) \
+    ENUMSTR(L) \
+    ENUMSTR(R) \
+    ENUMSTR(Guide) \
+    ENUMSTR(A) \
+    ENUMSTR(B) \
+    ENUMSTR(X) \
+    ENUMSTR(Y)
+
+#define SIMPLE_TO_BUTTONS_N64 \
+    ENUMSTR(DpadUp) \
+    ENUMSTR(DpadDown) \
+    ENUMSTR(DpadLeft) \
+    ENUMSTR(DpadRight) \
+    ENUMSTR(Start) \
+    ENUMSTR(L) \
+    ENUMSTR(R) \
+    ENUMSTR(A) \
+    ENUMSTR(B) \
+    ENUMSTR(Z) \
+    ENUMSTR(CUp) \
+    ENUMSTR(CDown) \
+    ENUMSTR(CLeft) \
+    ENUMSTR(CRight)
+
     // TODO: FromButton -> Source
     enum class FromButton
     {
-        DpadUp,
-        DpadDown,
-        DpadLeft,
-        DpadRight,
-        Start,
-        Back,
-        LeftThumb,
-        RightThumb,
-        L,
-        R,
-        Guide,
-        A,
-        B,
-        X,
-        Y,
+#define ENUMSTR(name) name,
+        SIMPLE_FROM_BUTTONS_X360
+#undef ENUMSTR
 
         LeftStickUp,
         LeftStickDown,
@@ -45,20 +66,9 @@ namespace Simple
     // TODO: ToButton -> Destination
     enum class ToButton
     {
-        DpadUp,
-        DpadDown,
-        DpadLeft,
-        DpadRight,
-        Start,
-        L,
-        R,
-        A,
-        B,
-        Z,
-        CUp,
-        CDown,
-        CLeft,
-        CRight,
+#define ENUMSTR(name) name,
+        SIMPLE_TO_BUTTONS_N64
+#undef ENUMSTR
 
         StickUp,
         StickDown,
@@ -83,6 +93,8 @@ namespace Simple
     {
         Left,
         Right,
+
+        Count,
     };
 
     struct StickMapping
@@ -99,4 +111,15 @@ namespace Simple
     };
 
     using Config = std::variant<ButtonMapping, StickMapping>;
+    
+    constexpr int X360TriggerToButtonRange = 200;
+    constexpr int X360ThumbToButtonRange = 16000;
+    constexpr int N64StickToButtonRange = 80;
+    constexpr float ToStretch = 70.f / 80.f;
+
+    static bool similar(float a, float b)
+    {
+        const float EPSILON = 0.0001f;
+        return fabs(a - b) < EPSILON;
+    }
 }

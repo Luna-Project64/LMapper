@@ -44,22 +44,15 @@ namespace ControllerInterface
         y *= multiplier;
     }
 
-#define EPSILON 0.0001f
-    static bool similar(float a, float b)
-    {
-        return fabs(a - b) < EPSILON;
-    }
-
     std::optional<float> BilinearDiagonalStretcher::GetSimpleSlope() const
     {
-        if (!similar(toSlope_, 0.70710678118f)
-            || !similar(power_, 1.f))
+        float to = unslope(toSlope_);
+        float from = unslope(fromSlope_);
+        if (!Simple::similar(to, Simple::ToStretch)
+            || !Simple::similar(power_, 1.f))
             return std::nullopt;
 
-        if (similar(toSlope_, fromSlope_))
-            return 0.f;
-
-        return fromSlope_;
+        return to - from;
     }
 
     YAML::Node BilinearDiagonalStretcher::Serialize() const

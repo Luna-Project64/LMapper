@@ -57,7 +57,7 @@ namespace YAML
         int cmd = -1;
         std::string cmdStr = node.as<std::string>();
 
-        for (size_t i = 0; i < sizeof(LunaExCommand) / sizeof(LunaExCommand); i++)
+        for (size_t i = 0; i < sizeof(Luna::sNames) / sizeof(Luna::sNames[0]); i++)
         {
             if (cmdStr == Luna::sNames[i])
             {

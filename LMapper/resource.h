@@ -14,6 +14,8 @@
 #define IDC_GROUP_XBOX                  1006
 #define IDC_COMBO_XBOX                  1007
 #define IDC_COMBO_N64                   1008
+#define IDC_COMBO_XBOX2                 1009
+#define IDC_COMBO_XBOX_STICKS           1009
 #define IDC_STICK_DRAW                  1012
 #define IDC_N64_ACTIVE                  1013
 #define IDC_KEY_CHOOSE                  1014
@@ -25,8 +27,9 @@
 #define ID_LBL_DEADZONE2                1020
 #define IDC_SPIN_DEADZONE               1021
 #define IDC_SPIN_ANGLE                  1022
-#define IDC_WANT_DIAGONAL_DZ2           1023
 #define IDC_STRETCH_DIAGONALS           1023
+#define IDC_N64_RANGE                   1024
+#define IDC_LBL_RANGE                   1025
 
 // Next default values for new objects
 // 
@@ -34,7 +37,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
