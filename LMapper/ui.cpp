@@ -515,6 +515,13 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     stickDeadzoneSpin_.Attach(GetDlgItem(IDC_SPIN_DEADZONE));
     stickAngleDeadzoneSpin_.Attach(GetDlgItem(IDC_SPIN_ANGLE));
 
+    stickDeadzone_.SetScrollRange(0, 100, TRUE);
+    stickDeadzoneSpin_.SetScrollRange(0, 100, TRUE);
+    stickAngleDeadzone_.SetScrollRange(0, 100, TRUE);
+    stickAngleDeadzoneSpin_.SetScrollRange(0, 100, TRUE);
+    stickRange_.SetScrollRange(60, 127, TRUE);
+    stickStretching_.SetScrollRange(0, 50, TRUE);
+
     SetWindowSubclass(stickPicture_.m_hWnd, PictureSubclassProc, (UINT_PTR)this, (DWORD_PTR)this);
 
     digitalN64Active_.EnableWindow(FALSE);
@@ -1022,6 +1029,11 @@ void Dlg::refreshStick()
         return;
     }
 
+    deadzone = std::clamp(deadzone, 0.f, 100.f);
+    angleDeadzone = std::clamp(angleDeadzone, 0.f, 100.f);
+    stretch = std::clamp(stretch, 0.f, 50.f);
+    range = std::clamp(range, 1, 127);
+
     if (auto simple = config_.mappers[idx]->ToSimpleConfig())
     {
         if (auto stick = std::get_if<Simple::StickMapping>(&(*simple)))
@@ -1037,11 +1049,6 @@ void Dlg::refreshStick()
             }
         }
     }
-
-    deadzone = std::clamp(deadzone, 0.f, 100.f);
-    angleDeadzone = std::clamp(angleDeadzone, 0.f, 100.f);
-    stretch = std::clamp(stretch, 0.f, 50.f);
-    range = std::clamp(range, 1, 127);
 
     Mapping::Analog::BilinearStickMapper::Stretcher stretcher;
     if (stretch)
