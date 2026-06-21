@@ -30,9 +30,10 @@
 #define IDC_STRETCH_DIAGONALS           1023
 #define IDC_N64_RANGE                   1024
 #define IDC_LBL_RANGE                   1025
-#define IDC_RICHEDIT_RAW                1026
 #define ID_OK                           1027
-#define ID_CANCEL                       1028
+#define IDC_EDIT_RAW                    1029
+#define IDC_BUTTON1                     1030
+#define IDC_BUTTON_COMPILE              1030
 
 // Next default values for new objects
 // 
@@ -40,7 +41,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1029
+#define _APS_NEXT_CONTROL_VALUE         1031
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

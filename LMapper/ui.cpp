@@ -57,33 +57,6 @@ public:
 
     enum { IDD = IDD_DIALOG_MAIN };
 
-    BEGIN_MSG_MAP_EX(Dlg)
-        MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
-        MESSAGE_HANDLER(WM_KEYUP, onKeyUp)
-        MESSAGE_HANDLER(WM_KEYDOWN, onKeyDown)
-        COMMAND_ID_HANDLER(IDOK, onSaveIgnore)
-        COMMAND_ID_HANDLER(IDCANCEL, onCancel)
-        COMMAND_ID_HANDLER(ID_RESET, onReset)
-        COMMAND_ID_HANDLER(ID_BUTTON_UP, onUp)
-        COMMAND_ID_HANDLER(ID_BUTTON_DOWN, onDown)
-        COMMAND_ID_HANDLER(ID_ADD, onAdd)
-        COMMAND_ID_HANDLER(ID_REMOVE, onRemove)
-        COMMAND_ID_HANDLER(IDC_KEY_CHOOSE, onCalibrate)
-        NOTIFY_HANDLER_EX(IDC_LIST_MAPPINGS, LVN_ITEMACTIVATE, onListItemActivate)
-        NOTIFY_HANDLER_EX(IDC_LIST_MAPPINGS, LVN_DELETEITEM, onListItemDeleted)
-        NOTIFY_HANDLER_EX(IDC_LIST_MAPPINGS, LVN_ITEMCHANGED, onListItemChanged)
-        COMMAND_HANDLER(IDC_COMBO_XBOX, CBN_SELCHANGE, onDigitalXboxChanged)
-        COMMAND_HANDLER(IDC_COMBO_N64, CBN_SELCHANGE, onDigitalN64Changed)
-        COMMAND_HANDLER(IDC_COMBO_TYPE, CBN_SELCHANGE, onTypeChanged)
-        COMMAND_HANDLER(IDC_DEADZONE, EN_CHANGE, onStickChangeDeadzone)
-        COMMAND_HANDLER(IDC_ANGLE_DEADZONE, EN_CHANGE, onStickChangeAngleDeadzone)
-        COMMAND_HANDLER(IDC_WANT_DIAGONAL_DZ, BN_CLICKED, onStickClickedWantDiagonalDz)
-        COMMAND_HANDLER(IDC_STRETCH, EN_CHANGE, onStickChangeStretch)
-        COMMAND_HANDLER(IDC_N64_RANGE, EN_CHANGE, onStickChangeN64Range)
-        COMMAND_HANDLER(IDC_STRETCH_DIAGONALS, BN_CLICKED, onStickClickedStretchDiagonals)
-        COMMAND_HANDLER(ID_OK, BN_CLICKED, onSave)
-        END_MSG_MAP()
-
     bool Saved(void) const { return saved_; }
     const Config& GetConfig(void) const { return config_; }
 
@@ -91,6 +64,9 @@ protected:
     bool saved_ = false;
     CListViewCtrl controls_;
     CComboBox types_;
+
+    CWindow groupXbox_;
+    CWindow groupN64_;
 
     CComboBox digitalXboxOptions_;
     CButton digitalXboxKeyboard_;
@@ -112,7 +88,8 @@ protected:
     CWindow stickDeadzoneSpin_;
     CWindow stickAngleDeadzoneSpin_;
 
-    CRichEditCtrl rawEdit_;
+    CEdit rawEdit_;
+    CButton rawCompile_;
 
     Config config_;
     int selectedIndex_;
@@ -154,6 +131,8 @@ protected:
     LRESULT onStickChangeN64Range(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT onStickClickedStretchDiagonals(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
+    LRESULT onYAMLCompile(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+
     LRESULT onListItemActivate(NMHDR* phdr);
     LRESULT onListItemDeleted(NMHDR* phdr);
     LRESULT onListItemChanged(NMHDR* phdr);
@@ -178,6 +157,34 @@ protected:
     void refreshTypeWindows(int type);
     void refreshDigital();
     void refreshStick();
+public:
+    BEGIN_MSG_MAP_EX(Dlg)
+        MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
+        MESSAGE_HANDLER(WM_KEYUP, onKeyUp)
+        MESSAGE_HANDLER(WM_KEYDOWN, onKeyDown)
+        COMMAND_ID_HANDLER(IDOK, onSaveIgnore)
+        COMMAND_ID_HANDLER(IDCANCEL, onCancel)
+        COMMAND_ID_HANDLER(ID_RESET, onReset)
+        COMMAND_ID_HANDLER(ID_BUTTON_UP, onUp)
+        COMMAND_ID_HANDLER(ID_BUTTON_DOWN, onDown)
+        COMMAND_ID_HANDLER(ID_ADD, onAdd)
+        COMMAND_ID_HANDLER(ID_REMOVE, onRemove)
+        COMMAND_ID_HANDLER(IDC_KEY_CHOOSE, onCalibrate)
+        NOTIFY_HANDLER_EX(IDC_LIST_MAPPINGS, LVN_ITEMACTIVATE, onListItemActivate)
+        NOTIFY_HANDLER_EX(IDC_LIST_MAPPINGS, LVN_DELETEITEM, onListItemDeleted)
+        NOTIFY_HANDLER_EX(IDC_LIST_MAPPINGS, LVN_ITEMCHANGED, onListItemChanged)
+        COMMAND_HANDLER(IDC_COMBO_XBOX, CBN_SELCHANGE, onDigitalXboxChanged)
+        COMMAND_HANDLER(IDC_COMBO_N64, CBN_SELCHANGE, onDigitalN64Changed)
+        COMMAND_HANDLER(IDC_COMBO_TYPE, CBN_SELCHANGE, onTypeChanged)
+        COMMAND_HANDLER(IDC_DEADZONE, EN_CHANGE, onStickChangeDeadzone)
+        COMMAND_HANDLER(IDC_ANGLE_DEADZONE, EN_CHANGE, onStickChangeAngleDeadzone)
+        COMMAND_HANDLER(IDC_WANT_DIAGONAL_DZ, BN_CLICKED, onStickClickedWantDiagonalDz)
+        COMMAND_HANDLER(IDC_STRETCH, EN_CHANGE, onStickChangeStretch)
+        COMMAND_HANDLER(IDC_N64_RANGE, EN_CHANGE, onStickChangeN64Range)
+        COMMAND_HANDLER(IDC_STRETCH_DIAGONALS, BN_CLICKED, onStickClickedStretchDiagonals)
+        COMMAND_HANDLER(ID_OK, BN_CLICKED, onSave)
+        COMMAND_HANDLER(IDC_BUTTON_COMPILE, BN_CLICKED, onYAMLCompile)
+        END_MSG_MAP()
 };
 
 static const char* toString(Simple::FromButton button)
@@ -382,6 +389,32 @@ static N64::IModifierPtr makeMapper(Simple::ToButton to)
     return {};
 }
 
+static std::string toMFCString(const YAML::Node& node)
+{
+    YAML::Emitter emitter;
+
+    emitter.SetIndent(2);
+    emitter << node;
+
+    // MFC will fail if newlines arent encoded as \r\n, so we need to convert them here
+    std::string result;
+    const char* line = emitter.c_str();
+    while (*line)
+    {
+        if (*line == '\n')
+        {
+            result += "\r\n";
+        }
+        else
+        {
+            result += *line;
+        }
+        line++;
+    }
+
+    return result;
+}
+
 static Mapping::IMapperPtr makeMapper(Simple::FromButton from, Simple::ToButton to)
 {
     auto fromMapper = makeMapper(from);
@@ -467,9 +500,9 @@ LRESULT Dlg::pictureSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         LineTo(hMemDC, asScreenInt(width, -80.f / 128.f), asScreenInt(height, 0));
 
         MoveToEx(hMemDC, asScreenInt(width, drawY_) - 1, asScreenInt(height, -drawX_), NULL);
-        LineTo(hMemDC, asScreenInt(width, drawY_) + 1, asScreenInt(height, -drawX_));
+        LineTo(hMemDC, asScreenInt(width, drawY_) + 2, asScreenInt(height, -drawX_));
         MoveToEx(hMemDC, asScreenInt(width, drawY_), asScreenInt(height, -drawX_) - 1, NULL);
-        LineTo(hMemDC, asScreenInt(width, drawY_), asScreenInt(height, -drawX_) + 1);
+        LineTo(hMemDC, asScreenInt(width, drawY_), asScreenInt(height, -drawX_) + 2);
 
         SelectObject(hMemDC, hOldPen);
         DeleteObject(hPen);
@@ -492,32 +525,15 @@ LRESULT Dlg::pictureSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
 
-static LRESULT CALLBACK RawEditSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
-{
-    if (uMsg == WM_GETDLGCODE) {
-        // Check what message prompted the query
-        MSG* msg = (MSG*)lParam;
-        if (msg && msg->message == WM_KEYDOWN) {
-            if (msg->wParam == VK_RETURN) {
-                // Example: Process the Enter key locally and prevent it from firing the default button
-                return DLGC_WANTMESSAGE;
-            }
-            if (msg->wParam == VK_TAB) {
-                // Example: Want the Tab key inside the richedit instead of tabbing out
-                return DLGC_WANTMESSAGE | DLGC_WANTTAB;
-            }
-        }
-    }
-
-    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-}
-
 LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     SetTimer((UINT_PTR)this, USER_TIMER_MINIMUM, onTimer);
 
     controls_.Attach(GetDlgItem(IDC_LIST_MAPPINGS));
     types_.Attach(GetDlgItem(IDC_COMBO_TYPE));
+
+    groupXbox_.Attach(GetDlgItem(IDC_GROUP_XBOX));
+    groupN64_.Attach(GetDlgItem(IDC_GROUP_N64));
 
     digitalXboxOptions_.Attach(GetDlgItem(IDC_COMBO_XBOX));
     digitalXboxKeyboard_.Attach(GetDlgItem(IDC_KEY_CHOOSE));
@@ -539,7 +555,8 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     stickDeadzoneSpin_.Attach(GetDlgItem(IDC_SPIN_DEADZONE));
     stickAngleDeadzoneSpin_.Attach(GetDlgItem(IDC_SPIN_ANGLE));
 
-    rawEdit_.Attach(GetDlgItem(IDC_RICHEDIT_RAW));
+    rawEdit_.Attach(GetDlgItem(IDC_EDIT_RAW));
+    rawCompile_.Attach(GetDlgItem(IDC_BUTTON_COMPILE));
 
     stickDeadzone_.SetScrollRange(0, 100, TRUE);
     stickDeadzoneSpin_.SetScrollRange(0, 100, TRUE);
@@ -548,7 +565,6 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     stickRange_.SetScrollRange(60, 127, TRUE);
     stickStretching_.SetScrollRange(0, 50, TRUE);
 
-    SetWindowSubclass(rawEdit_.m_hWnd, RawEditSubclassProc, (UINT_PTR)this, (DWORD_PTR)this);
     SetWindowSubclass(stickPicture_.m_hWnd, PictureSubclassProc, (UINT_PTR)this, (DWORD_PTR)this);
 
     digitalN64Active_.EnableWindow(FALSE);
@@ -564,9 +580,7 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 
     types_.AddString("Digital");
     types_.AddString("Stick");
-#if notyet
-    types_.AddString("Raw");
-#endif
+    types_.AddString("YAML");
 
     for (int i = 0; i < (int)Simple::ToButton::Count; i++)
     {
@@ -693,7 +707,7 @@ void Dlg::refreshTypeWindows(int type)
         &stickAngleDeadzoneSpin_,
         &stickXboxOptions_
     };
-    static CWindow* raw[] = { &rawEdit_ };
+    static CWindow* raw[] = { &rawEdit_, &rawCompile_ };
 
     for (auto* w : digitals) w->ShowWindow(FALSE);
     for (auto* w : sticks) w->ShowWindow(FALSE);
@@ -710,12 +724,14 @@ void Dlg::refreshTypeWindows(int type)
         for (auto* w : sticks) w->ShowWindow(TRUE);
         break;
 
-#if notyet
     case 2:
         for (auto* w : raw) w->ShowWindow(TRUE);
         break;
-#endif
     }
+
+    bool hideGroups = type == 2;
+    groupXbox_.ShowWindow(!hideGroups);
+    groupN64_.ShowWindow(!hideGroups);
 
     curDrawnType_ = type;
 }
@@ -737,6 +753,14 @@ LRESULT Dlg::onListItemChanged(NMHDR* phdr)
     if (!mapperDesc)
     {
         refreshTypeWindows(2);
+        try
+        {
+            auto node = mapper->Serialize();
+            rawEdit_.SetWindowTextA(toMFCString(node).c_str());
+        }
+        catch (...)
+        {
+        }
         return 0;
     }
 
@@ -807,7 +831,7 @@ void Dlg::onTimer(HWND, UINT, UINT_PTR ptr, DWORD)
 
 void Dlg::onTimer()
 {
-    XINPUT_STATE state;
+    XINPUT_STATE state{};
     XInputGetState(0, &state);
 
     if (choosing_)
@@ -1133,13 +1157,30 @@ LRESULT Dlg::onTypeChanged(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
         return 0;
 
     refreshTypeWindows(types_.GetCurSel());
+    if (2 == types_.GetCurSel())
+    {
+        int index = selectedIndex();
+        selectedIndex_ = index;
+        if (index < 0 || index >= (int)config_.mappers.size())
+        {
+            return 0;
+        }
+
+        const auto& mapper = config_.mappers[index];
+        try
+        {
+            rawEdit_.SetWindowTextA(toMFCString(mapper->Serialize()).c_str());
+        }
+        catch (...)
+        {
+        }
+    }
+
     return 0;
 }
 
 void DialogPresent(HWND)
 {
-    (void) LoadLibrary("riched32.dll");
-
     Dlg dlg;
     dlg.DoModal();
     if (dlg.Saved())
@@ -1215,5 +1256,33 @@ LRESULT Dlg::onStickChangeN64Range(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 LRESULT Dlg::onStickClickedStretchDiagonals(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
     refreshStick();
+    return 0;
+}
+
+LRESULT Dlg::onYAMLCompile(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+    auto line = extract(rawEdit_);
+    if (!line)
+        return 0;
+
+    try
+    {
+        auto node = YAML::Load(*line).as<Mapping::IMapperPtr>();
+        auto index = selectedIndex();
+        if (index < 0 || index >= (int)config_.mappers.size())
+            return 0;
+
+        config_.mappers[index] = std::move(node);
+        refreshAt(index);
+    }
+    catch (const YAML::ParserException& ex)
+    {
+        ::MessageBox(NULL, ex.what(), "YAML Parser Error", MB_ICONERROR);
+    }
+    catch (...)
+    {
+        ::MessageBox(NULL, "Failed to parse YAML", "Error", MB_ICONERROR);
+    }
+
     return 0;
 }
