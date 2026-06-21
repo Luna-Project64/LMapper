@@ -61,7 +61,7 @@ public:
         MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
         MESSAGE_HANDLER(WM_KEYUP, onKeyUp)
         MESSAGE_HANDLER(WM_KEYDOWN, onKeyDown)
-        COMMAND_ID_HANDLER(IDOK, onSave)
+        COMMAND_ID_HANDLER(IDOK, onSaveIgnore)
         COMMAND_ID_HANDLER(IDCANCEL, onCancel)
         COMMAND_ID_HANDLER(ID_RESET, onReset)
         COMMAND_ID_HANDLER(ID_BUTTON_UP, onUp)
@@ -81,6 +81,7 @@ public:
         COMMAND_HANDLER(IDC_STRETCH, EN_CHANGE, onStickChangeStretch)
         COMMAND_HANDLER(IDC_N64_RANGE, EN_CHANGE, onStickChangeN64Range)
         COMMAND_HANDLER(IDC_STRETCH_DIAGONALS, BN_CLICKED, onStickClickedStretchDiagonals)
+        COMMAND_HANDLER(ID_OK, BN_CLICKED, onSave)
         END_MSG_MAP()
 
     bool Saved(void) const { return saved_; }
@@ -111,6 +112,8 @@ protected:
     CWindow stickDeadzoneSpin_;
     CWindow stickAngleDeadzoneSpin_;
 
+    CRichEditCtrl rawEdit_;
+
     Config config_;
     int selectedIndex_;
     int curDrawnType_ = -1;
@@ -130,6 +133,7 @@ protected:
     LRESULT onKeyUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT onKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT onSave(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT onSaveIgnore(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT onCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT onReset(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT onUp(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -488,6 +492,26 @@ LRESULT Dlg::pictureSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
 
+static LRESULT CALLBACK RawEditSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+    if (uMsg == WM_GETDLGCODE) {
+        // Check what message prompted the query
+        MSG* msg = (MSG*)lParam;
+        if (msg && msg->message == WM_KEYDOWN) {
+            if (msg->wParam == VK_RETURN) {
+                // Example: Process the Enter key locally and prevent it from firing the default button
+                return DLGC_WANTMESSAGE;
+            }
+            if (msg->wParam == VK_TAB) {
+                // Example: Want the Tab key inside the richedit instead of tabbing out
+                return DLGC_WANTMESSAGE | DLGC_WANTTAB;
+            }
+        }
+    }
+
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
 LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     SetTimer((UINT_PTR)this, USER_TIMER_MINIMUM, onTimer);
@@ -515,6 +539,8 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     stickDeadzoneSpin_.Attach(GetDlgItem(IDC_SPIN_DEADZONE));
     stickAngleDeadzoneSpin_.Attach(GetDlgItem(IDC_SPIN_ANGLE));
 
+    rawEdit_.Attach(GetDlgItem(IDC_RICHEDIT_RAW));
+
     stickDeadzone_.SetScrollRange(0, 100, TRUE);
     stickDeadzoneSpin_.SetScrollRange(0, 100, TRUE);
     stickAngleDeadzone_.SetScrollRange(0, 100, TRUE);
@@ -522,6 +548,7 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     stickRange_.SetScrollRange(60, 127, TRUE);
     stickStretching_.SetScrollRange(0, 50, TRUE);
 
+    SetWindowSubclass(rawEdit_.m_hWnd, RawEditSubclassProc, (UINT_PTR)this, (DWORD_PTR)this);
     SetWindowSubclass(stickPicture_.m_hWnd, PictureSubclassProc, (UINT_PTR)this, (DWORD_PTR)this);
 
     digitalN64Active_.EnableWindow(FALSE);
@@ -537,6 +564,9 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 
     types_.AddString("Digital");
     types_.AddString("Stick");
+#if notyet
+    types_.AddString("Raw");
+#endif
 
     for (int i = 0; i < (int)Simple::ToButton::Count; i++)
     {
@@ -616,6 +646,11 @@ LRESULT Dlg::onSave(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
     return 0;
 }
 
+LRESULT Dlg::onSaveIgnore(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    return 0;
+}
+
 LRESULT Dlg::onCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     saved_ = false;
@@ -658,9 +693,11 @@ void Dlg::refreshTypeWindows(int type)
         &stickAngleDeadzoneSpin_,
         &stickXboxOptions_
     };
+    static CWindow* raw[] = { &rawEdit_ };
 
     for (auto* w : digitals) w->ShowWindow(FALSE);
     for (auto* w : sticks) w->ShowWindow(FALSE);
+    for (auto* w : raw) w->ShowWindow(FALSE);
 
     types_.SetCurSel(type);
     switch (type)
@@ -672,6 +709,12 @@ void Dlg::refreshTypeWindows(int type)
     case 1:
         for (auto* w : sticks) w->ShowWindow(TRUE);
         break;
+
+#if notyet
+    case 2:
+        for (auto* w : raw) w->ShowWindow(TRUE);
+        break;
+#endif
     }
 
     curDrawnType_ = type;
@@ -1095,10 +1138,10 @@ LRESULT Dlg::onTypeChanged(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 
 void DialogPresent(HWND)
 {
-    Dlg dlg;
+    (void) LoadLibrary("riched32.dll");
 
-    auto err = dlg.DoModal();
-    auto errVal = GetLastError();
+    Dlg dlg;
+    dlg.DoModal();
     if (dlg.Saved())
     {
         const auto& config = dlg.GetConfig();
