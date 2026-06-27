@@ -166,7 +166,7 @@ EXPORT void CALL InitiateControllers(HWND hMainWindow, CONTROL Controls[4])
             auto connected = ERROR_SUCCESS == err;
         }
 
-        Controls[i].Plugin  = connected;
+        Controls[i].Plugin  = PLUGIN_MEMPAK;
         Controls[i].Present = connected;
         Controls[i].RawData = false;
     }
