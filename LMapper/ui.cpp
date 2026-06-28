@@ -22,8 +22,10 @@
 #include "resource.h"
 
 #include "config.h"
+#include "Mapper/ControllerInterfaceImpl.h"
 #include "Mapper/Keyboard.h"
 #include "Mapper/Luna.h"
+#include "Mapper/MappingImpl.h"
 #include "Win.h"
 
 #include <chrono>
@@ -323,33 +325,33 @@ static X360::IEventPtr makeMapper(Simple::FromButton from)
 {
     switch (from)
     {
-#define ENUMSTR(name) case Simple::FromButton::name: return std::make_shared<X360::Button>(X360::Buttons::name);
+#define ENUMSTR(name) case Simple::FromButton::name: return std::make_unique<X360::Button>(X360::Buttons::name);
         SIMPLE_FROM_BUTTONS_X360
 #undef ENUMSTR
 
     case Simple::FromButton::LeftStickUp:
-        return std::make_shared<X360::Thumb>(X360::Thumbs::LeftY, ControllerInterface::AxisComparerType::More, Simple::X360ThumbToButtonRange);
+        return std::make_unique<X360::Thumb>(X360::Thumbs::LeftY, ControllerInterface::AxisComparerType::More, Simple::X360ThumbToButtonRange);
     case Simple::FromButton::LeftStickDown:
-        return std::make_shared<X360::Thumb>(X360::Thumbs::LeftY, ControllerInterface::AxisComparerType::Less, -Simple::X360ThumbToButtonRange);
+        return std::make_unique<X360::Thumb>(X360::Thumbs::LeftY, ControllerInterface::AxisComparerType::Less, -Simple::X360ThumbToButtonRange);
     case Simple::FromButton::LeftStickLeft:
-        return std::make_shared<X360::Thumb>(X360::Thumbs::LeftX, ControllerInterface::AxisComparerType::More, Simple::X360ThumbToButtonRange);
+        return std::make_unique<X360::Thumb>(X360::Thumbs::LeftX, ControllerInterface::AxisComparerType::More, Simple::X360ThumbToButtonRange);
     case Simple::FromButton::LeftStickRight:
-        return std::make_shared<X360::Thumb>(X360::Thumbs::LeftX, ControllerInterface::AxisComparerType::Less, -Simple::X360ThumbToButtonRange);
+        return std::make_unique<X360::Thumb>(X360::Thumbs::LeftX, ControllerInterface::AxisComparerType::Less, -Simple::X360ThumbToButtonRange);
     case Simple::FromButton::RightStickUp:
-        return std::make_shared<X360::Thumb>(X360::Thumbs::RightY, ControllerInterface::AxisComparerType::More, Simple::X360ThumbToButtonRange);
+        return std::make_unique<X360::Thumb>(X360::Thumbs::RightY, ControllerInterface::AxisComparerType::More, Simple::X360ThumbToButtonRange);
     case Simple::FromButton::RightStickDown:
-        return std::make_shared<X360::Thumb>(X360::Thumbs::RightY, ControllerInterface::AxisComparerType::Less, -Simple::X360ThumbToButtonRange);
+        return std::make_unique<X360::Thumb>(X360::Thumbs::RightY, ControllerInterface::AxisComparerType::Less, -Simple::X360ThumbToButtonRange);
     case Simple::FromButton::RightStickLeft:
-        return std::make_shared<X360::Thumb>(X360::Thumbs::RightX, ControllerInterface::AxisComparerType::More, Simple::X360ThumbToButtonRange);
+        return std::make_unique<X360::Thumb>(X360::Thumbs::RightX, ControllerInterface::AxisComparerType::More, Simple::X360ThumbToButtonRange);
     case Simple::FromButton::RightStickRight:
-        return std::make_shared<X360::Thumb>(X360::Thumbs::RightX, ControllerInterface::AxisComparerType::Less, -Simple::X360ThumbToButtonRange);
+        return std::make_unique<X360::Thumb>(X360::Thumbs::RightX, ControllerInterface::AxisComparerType::Less, -Simple::X360ThumbToButtonRange);
 
     case Simple::FromButton::LeftTrigger:
-        return std::make_shared<X360::Trigger>(X360::Triggers::LeftTrigger, ControllerInterface::AxisComparerType::More, Simple::X360TriggerToButtonRange);
+        return std::make_unique<X360::Trigger>(X360::Triggers::LeftTrigger, ControllerInterface::AxisComparerType::More, Simple::X360TriggerToButtonRange);
     case Simple::FromButton::RightTrigger:
-        return std::make_shared<X360::Trigger>(X360::Triggers::RightTrigger, ControllerInterface::AxisComparerType::More, Simple::X360TriggerToButtonRange);
+        return std::make_unique<X360::Trigger>(X360::Triggers::RightTrigger, ControllerInterface::AxisComparerType::More, Simple::X360TriggerToButtonRange);
 
-#define ENUMSTR(name) case Simple::FromButton::name: return std::make_shared<Keyboard::Button>(Keyboard::Buttons::name);
+#define ENUMSTR(name) case Simple::FromButton::name: return std::make_unique<Keyboard::Button>(Keyboard::Buttons::name);
 #include "Mapper/KeyboardXMacro.h"
 #undef ENUMSTR
     }
@@ -362,27 +364,27 @@ static N64::IModifierPtr makeMapper(Simple::ToButton to)
 {
     switch (to)
     {
-#define ENUMSTR(name) case Simple::ToButton::name: return std::make_shared<N64::Button>(N64::Buttons::name);
+#define ENUMSTR(name) case Simple::ToButton::name: return std::make_unique<N64::Button>(N64::Buttons::name);
         SIMPLE_TO_BUTTONS_N64
 #undef ENUMSTR
 
     case Simple::ToButton::StickUp:
-        return std::make_shared<N64::Axis>(N64::Axises::Y, Simple::N64StickToButtonRange);
+        return std::make_unique<N64::Axis>(N64::Axises::Y, Simple::N64StickToButtonRange);
     case Simple::ToButton::StickDown:
-        return std::make_shared<N64::Axis>(N64::Axises::Y, -Simple::N64StickToButtonRange);
+        return std::make_unique<N64::Axis>(N64::Axises::Y, -Simple::N64StickToButtonRange);
     case Simple::ToButton::StickLeft:
-        return std::make_shared<N64::Axis>(N64::Axises::X, -Simple::N64StickToButtonRange);
+        return std::make_unique<N64::Axis>(N64::Axises::X, -Simple::N64StickToButtonRange);
     case Simple::ToButton::StickRight:
-        return std::make_shared<N64::Axis>(N64::Axises::X, Simple::N64StickToButtonRange);
+        return std::make_unique<N64::Axis>(N64::Axises::X, Simple::N64StickToButtonRange);
 
     case Simple::ToButton::LoadState:
-        return std::make_shared<Luna::Cmd>(LUNA_EXCMD_LOAD_STATE);
+        return std::make_unique<Luna::Cmd>(LUNA_EXCMD_LOAD_STATE);
     case Simple::ToButton::SaveState:
-        return std::make_shared<Luna::Cmd>(LUNA_EXCMD_SAVE_STATE);
+        return std::make_unique<Luna::Cmd>(LUNA_EXCMD_SAVE_STATE);
     case Simple::ToButton::UnlockFPS:
-        return std::make_shared<Luna::Cmd>(LUNA_EXCMD_UNLOCK_FPS);
+        return std::make_unique<Luna::Cmd>(LUNA_EXCMD_UNLOCK_FPS);
     case Simple::ToButton::LockFPS:
-        return std::make_shared<Luna::Cmd>(LUNA_EXCMD_LOCK_FPS);
+        return std::make_unique<Luna::Cmd>(LUNA_EXCMD_LOCK_FPS);
     }
 
     MessageBox(NULL, "Unknown ToButton", "Error", MB_ICONERROR);
@@ -425,7 +427,7 @@ static Mapping::IMapperPtr makeMapper(Simple::FromButton from, Simple::ToButton 
         return {};
     }
 
-    return std::make_shared<Mapping::Digital::Mapper>(fromMapper, toMapper);
+    return std::make_unique<Mapping::Digital::Mapper>(std::move(fromMapper), std::move(toMapper));
 }
 
 static std::optional<Simple::FromButton> fromX360ToButton(SHORT wButtons)
@@ -928,12 +930,12 @@ LRESULT Dlg::onAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
     {
         if (i == idx)
         {
-            auto ev = std::make_shared<X360::Button>(X360::Buttons::A);
-            auto mod = std::make_shared<N64::Button>(N64::Buttons::A);
-            mappers.push_back(std::make_shared<Mapping::Digital::Mapper>(std::move(ev), std::move(mod)));
+            auto ev = std::make_unique<X360::Button>(X360::Buttons::A);
+            auto mod = std::make_unique<N64::Button>(N64::Buttons::A);
+            mappers.push_back(std::make_unique<Mapping::Digital::Mapper>(std::move(ev), std::move(mod)));
         }
 
-        mappers.push_back(config_.mappers[i]);
+        mappers.push_back(std::move(config_.mappers[i]));
     }
 
     config_.mappers = std::move(mappers);
@@ -953,7 +955,7 @@ LRESULT Dlg::onRemove(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
     for (size_t i = 0; i < config_.mappers.size(); i++)
     {
         if (i != idx)
-            mappers.push_back(config_.mappers[i]);
+            mappers.push_back(std::move(config_.mappers[i]));
     }
 
     config_.mappers = std::move(mappers);
@@ -1134,7 +1136,7 @@ void Dlg::refreshStick()
     N64::AxisConverter tX(N64::Axises::X, 0, range);
     N64::AxisConverter tY(N64::Axises::Y, 0, range);
 
-    config_.mappers[idx] = std::make_shared<Mapping::Analog::BilinearStickMapper>(fX, fY, tX, tY, stretcher, deadzoner, std::nullopt, angleDeadzoner);
+    config_.mappers[idx] = std::make_unique<Mapping::Analog::BilinearStickMapper>(fX, fY, tX, tY, stretcher, deadzoner, std::nullopt, angleDeadzoner);
     refreshAt(idx);
 }
 

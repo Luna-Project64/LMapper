@@ -117,12 +117,12 @@ namespace YAML
             if (isXboxButton)
             {
                 auto buttons = node.as<X360::Buttons>();
-                ptr = std::make_shared<X360::Button>(buttons);
+                ptr = std::make_unique<X360::Button>(buttons);
             }
             else
             {
                 auto buttons = node.as<Keyboard::Buttons>();
-                ptr = std::make_shared<Keyboard::Button>(buttons);
+                ptr = std::make_unique<Keyboard::Button>(buttons);
             }
             return true;
         }
@@ -181,7 +181,7 @@ namespace YAML
         auto value = (SHORT)valueNode.as<int>();
         auto compar = comparNode.as<ControllerInterface::AxisComparerType>();
 
-        ptr = std::make_shared<X360::Thumb>(offset, compar, value);
+        ptr = std::make_unique<X360::Thumb>(offset, compar, value);
         return true;
     }
 
@@ -201,7 +201,7 @@ namespace YAML
         auto value = (BYTE)valueNode.as<int>();
         auto compar = comparNode.as<ControllerInterface::AxisComparerType>();
 
-        ptr = std::make_shared<X360::Trigger>(offset, compar, value);
+        ptr = std::make_unique<X360::Trigger>(offset, compar, value);
         return true;
     }
 

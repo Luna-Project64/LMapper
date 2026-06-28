@@ -13,7 +13,7 @@ namespace Mapping
 
         virtual std::optional<Simple::Config> ToSimpleConfig() const override;
         virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) override;
-        virtual YAML::Node Serialize() const;
+        virtual YAML::Node Serialize() const override;
 
         std::vector<IMapperPtr> mappers_;
 
@@ -21,7 +21,7 @@ namespace Mapping
         int curMapper_ = 0;
     };
 
-    using GroupPtr = std::shared_ptr<Group>;
+    using GroupPtr = std::unique_ptr<Group>;
 }
 
 namespace YAML

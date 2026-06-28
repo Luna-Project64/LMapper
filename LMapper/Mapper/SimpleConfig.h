@@ -117,7 +117,7 @@ namespace Simple
     constexpr int N64StickToButtonRange = 80;
     constexpr float ToStretch = 70.f / 80.f;
 
-    static bool similar(float a, float b)
+    static inline bool similar(float a, float b)
     {
         const float EPSILON = 0.0001f;
         return fabs(a - b) < EPSILON;

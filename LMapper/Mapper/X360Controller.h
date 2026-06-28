@@ -60,7 +60,7 @@ namespace X360
         Button(Buttons);
 
         virtual std::optional<Simple::FromButton> ToSimpleButton() const override;
-        virtual bool Happened(const Controller&, const std::atomic_bool*) const;
+        virtual bool Happened(const Controller&, const std::atomic_bool*) const override;
     };
 
     template<typename AxisT, typename OffsetT>
@@ -74,7 +74,7 @@ namespace X360
         Axis(IAxis<AxisT, OffsetT> me);
 
         virtual std::optional<Simple::FromButton> ToSimpleButton() const override;
-        virtual bool Happened(const Controller&, const std::atomic_bool*) const;
+        virtual bool Happened(const Controller&, const std::atomic_bool*) const override;
     };
 
     class Thumb final : public Axis<SHORT, Thumbs>
@@ -84,7 +84,7 @@ namespace X360
     public:
         Thumb(Thumbs, ControllerInterface::AxisComparerType type, SHORT value);
     };
-    using ThumbPtr = std::shared_ptr<Thumb>;
+    using ThumbPtr = std::unique_ptr<Thumb>;
 
     class Trigger final : public Axis<BYTE, Triggers>
     {
@@ -93,7 +93,7 @@ namespace X360
     public:
         Trigger(Triggers, ControllerInterface::AxisComparerType type, BYTE value);
     };
-    using TriggerPtr = std::shared_ptr<Trigger>;
+    using TriggerPtr = std::unique_ptr<Trigger>;
 
     class ThumbsConverter final : public ControllerInterface::LinearConverter<X360::Thumbs, SHORT>
     {

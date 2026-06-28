@@ -48,7 +48,7 @@ namespace Mapping
             return node;
         }
 
-        static std::optional<Simple::FromStick> toSimpleFromStick(Simple::StickAxis x, Simple::StickAxis y)
+        static inline std::optional<Simple::FromStick> toSimpleFromStick(Simple::StickAxis x, Simple::StickAxis y)
         {
             if (x == Simple::StickAxis::LeftX && y == Simple::StickAxis::LeftY)
 				return Simple::FromStick::Left;
@@ -198,7 +198,7 @@ namespace YAML
         auto from = fromNode.as<FromConverter>();
         auto to = toNode.as<ToConverter>();
 
-        mapper = std::make_shared<Mapping::Analog::LinearMapper<FromConverter, ToConverter>>(from, to, deadzoner);
+        mapper = std::make_unique<Mapping::Analog::LinearMapper<FromConverter, ToConverter>>(std::move(from), std::move(to), std::move(deadzoner));
         return true;
     }
 
@@ -245,7 +245,7 @@ namespace YAML
         if (angleDeadzoneNode)
             angleDeadzone = angleDeadzoneNode.as<ControllerInterface::AngleDeadzoner>();
 
-        mapper = std::make_shared<Mapping::Analog::BilinearStickMapper>(fromX, fromY, toX, toY, stretcher, deadzoner, bilinearDeadzoner, angleDeadzone);
+        mapper = std::make_unique<Mapping::Analog::BilinearStickMapper>(std::move(fromX), std::move(fromY), std::move(toX), std::move(toY), std::move(stretcher), std::move(deadzoner), std::move(bilinearDeadzoner), std::move(angleDeadzone));
         return true;
     }
 }

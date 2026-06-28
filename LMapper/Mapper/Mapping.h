@@ -17,10 +17,11 @@ namespace Mapping
     class IMapper : public Serialization::ISerializable
     {
     public:
+        virtual ~IMapper() = default;
         virtual std::optional<Simple::Config> ToSimpleConfig() const = 0;
         virtual void Map(const X360::Controller& from, const std::atomic_bool* keyboard, N64::Controller& to) = 0;
     };
-    using IMapperPtr = std::shared_ptr<IMapper>;
+    using IMapperPtr = std::unique_ptr<IMapper>;
 
     namespace Analog
     {
@@ -71,10 +72,10 @@ namespace Mapping
         };
 
         template<typename FromConverter, typename ToConverter>
-        using LinearMapperPtr = std::shared_ptr<LinearMapper<FromConverter, ToConverter>>;
+        using LinearMapperPtr = std::unique_ptr<LinearMapper<FromConverter, ToConverter>>;
 
         template<typename FromConverter, typename ToConverter>
-        using BilinearMapperPtr = std::shared_ptr<BilinearMapper<FromConverter, ToConverter>>;
+        using BilinearMapperPtr = std::unique_ptr<BilinearMapper<FromConverter, ToConverter>>;
 
         using LinearTriggerMapper = LinearMapper<X360::TriggersConverter, N64::AxisConverter>;
         // TODO: Probably useless? Why is it even needed?
@@ -82,10 +83,10 @@ namespace Mapping
         using LinearStickMapper = LinearMapper<X360::ThumbsConverter, N64::AxisConverter>;
         using BilinearStickMapper = BilinearMapper<X360::ThumbsConverter, N64::AxisConverter>;
 
-        using LinearTriggerMapperPtr = std::shared_ptr<LinearTriggerMapper>;
-        using BilinearTriggerMapperPtr = std::shared_ptr<BilinearTriggerMapper>;
-        using LinearStickMapperPtr = std::shared_ptr<LinearStickMapper>;
-        using BilinearStickMapperPtr = std::shared_ptr<BilinearStickMapper>;
+        using LinearTriggerMapperPtr = std::unique_ptr<LinearTriggerMapper>;
+        using BilinearTriggerMapperPtr = std::unique_ptr<BilinearTriggerMapper>;
+        using LinearStickMapperPtr = std::unique_ptr<LinearStickMapper>;
+        using BilinearStickMapperPtr = std::unique_ptr<BilinearStickMapper>;
     }
 
     namespace Digital
@@ -104,7 +105,7 @@ namespace Mapping
             N64::IModifierPtr modifier_;
         };
 
-        using MapperPtr = std::shared_ptr<Mapper>;
+        using MapperPtr = std::unique_ptr<Mapper>;
     }
 
     using Mappers = std::vector<IMapperPtr>;

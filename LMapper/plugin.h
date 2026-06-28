@@ -16,7 +16,7 @@ public:
 
     void clearKeys()
     {
-        memset(activeKeys, sizeof(activeKeys), 1);
+        memset(activeKeys, 0, sizeof(activeKeys));
     }
 
     void setActiveKey(unsigned int k)

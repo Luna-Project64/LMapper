@@ -45,7 +45,7 @@ namespace YAML
 
         auto group = groupNode.as<std::vector<Mapping::IMapperPtr>>();
 
-        s = std::make_shared<Mapping::Group>(group);
+        s = std::make_unique<Mapping::Group>(std::move(group));
         return true;
     }
 }

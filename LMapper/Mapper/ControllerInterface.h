@@ -103,6 +103,7 @@ namespace ControllerInterface
     class IEvent : public virtual Serialization::ISerializable
     {
     public:
+        virtual ~IEvent() = default;
         virtual std::optional<Simple::FromButton> ToSimpleButton() const = 0;
         virtual bool Happened(const ControllerT&, const std::atomic_bool* keyboard) const = 0;
     };
@@ -111,15 +112,16 @@ namespace ControllerInterface
     class IModifier : public virtual Serialization::ISerializable
     {
     public:
+        virtual ~IModifier() = default;
         virtual std::optional<Simple::ToButton> ToSimpleButton() const = 0;
         virtual void Alter(ControllerT&) const = 0;
     };
 
     template<typename ControllerT>
-    using IEventPtr = std::shared_ptr<IEvent<ControllerT>>;
+    using IEventPtr = std::unique_ptr<IEvent<ControllerT>>;
 
     template<typename ControllerT>
-    using IModifierPtr = std::shared_ptr<IModifier<ControllerT>>;
+    using IModifierPtr = std::unique_ptr<IModifier<ControllerT>>;
 
     enum class SimpleStick
     {

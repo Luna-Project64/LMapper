@@ -22,7 +22,7 @@ namespace Luna
 		LunaExCommand cmd_;
     };
 
-    using CmdPtr = std::shared_ptr<Cmd>;
+    using CmdPtr = std::unique_ptr<Cmd>;
 }
 
 namespace YAML

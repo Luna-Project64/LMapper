@@ -89,7 +89,7 @@ namespace YAML
         auto switches = switchesNode.as<std::vector<Mapping::IMapperPtr>>();
         auto event = eventNode.as<X360::IEventPtr>();
 
-        s = std::make_shared<Mapping::Switcher>(cond, event, switches);
+        s = std::make_unique<Mapping::Switcher>(std::move(cond), std::move(event), std::move(switches));
         return true;
     }
 }

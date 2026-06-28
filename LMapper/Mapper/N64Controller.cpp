@@ -77,7 +77,7 @@ namespace YAML
         {
             // Button case
             auto buttons = node.as<N64::Buttons>();
-            ptr = std::make_shared<N64::Button>(buttons);
+            ptr = std::make_unique<N64::Button>(buttons);
             return true;
         }
 
@@ -135,7 +135,7 @@ namespace YAML
         auto offset = offsetNode.as<N64::Axises>();
         auto value = (SHORT)valueNode.as<int>();
 
-        ptr = std::make_shared<N64::Axis>(offset, value);
+        ptr = std::make_unique<N64::Axis>(offset, value);
         return true;
     }
 

@@ -69,7 +69,7 @@ namespace YAML
         if (cmd < 0)
             return false;
 
-        ptr = std::make_shared<Luna::Cmd>((LunaExCommand)cmd);
+        ptr = std::make_unique<Luna::Cmd>((LunaExCommand)cmd);
         return true;
     }
 }

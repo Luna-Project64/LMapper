@@ -11,7 +11,7 @@ namespace Mapping
 {
     namespace Digital
     {
-        Mapper::Mapper(X360::IEventPtr from, N64::IModifierPtr to) : event_(from), modifier_(to) {}
+        Mapper::Mapper(X360::IEventPtr from, N64::IModifierPtr to) : event_(std::move(from)), modifier_(std::move(to)) {}
 
         std::optional<Simple::Config> Mapper::ToSimpleConfig() const
         {
@@ -130,7 +130,7 @@ namespace YAML
         auto event = fromNode.as<X360::IEventPtr>();
         auto modifier = toNode.as<N64::IModifierPtr>();
 
-        mapper = std::make_shared<Mapping::Digital::Mapper>(event, modifier);
+        mapper = std::make_unique<Mapping::Digital::Mapper>(std::move(event), std::move(modifier));
         return true;
     }
 }

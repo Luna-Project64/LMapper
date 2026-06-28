@@ -67,7 +67,7 @@ namespace N64
         virtual void Alter(Controller&) const override;
     };
 
-    using AxisPtr = std::shared_ptr<Axis>;
+    using AxisPtr = std::unique_ptr<Axis>;
     class AxisConverter final : public ControllerInterface::LinearConverter<Axises, char>
     {
     public:
