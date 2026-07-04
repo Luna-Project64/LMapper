@@ -80,6 +80,7 @@ protected:
     CWindow stickLabel1_;
     CWindow stickLabel2_;
     CWindow stickLabel3_;
+    CWindow stickLabel4_;
     CWindow stickPicture_;
     CComboBox stickXboxOptions_;
     CEdit stickDeadzone_;
@@ -87,9 +88,10 @@ protected:
     CEdit stickStretching_;
     CEdit stickRange_;
     CButton stickAngleDeadzone8Dir_;
-    CButton stickStretchingDiagonal_;
     CWindow stickDeadzoneSpin_;
     CWindow stickAngleDeadzoneSpin_;
+    CWindow stickStretchingSpin_;
+    CWindow stickRangeSpin_;
 
     CEdit rawEdit_;
     CButton rawCompile_;
@@ -551,9 +553,11 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     digitalN64Active_.Attach(GetDlgItem(IDC_N64_ACTIVE));
     digitalKeyboard_.Attach(GetDlgItem(IDC_KEY_CHOOSE));
 
+
     stickLabel1_.Attach(GetDlgItem(ID_LBL_DEADZONE2));
     stickLabel2_.Attach(GetDlgItem(ID_LBL_DEADZONE));
     stickLabel3_.Attach(GetDlgItem(IDC_LBL_RANGE));
+    stickLabel4_.Attach(GetDlgItem(IDC_LBL_STRETCH));
     stickPicture_.Attach(GetDlgItem(IDC_STICK_DRAW));
     stickXboxOptions_.Attach(GetDlgItem(IDC_COMBO_XBOX_STICKS));
     stickDeadzone_.Attach(GetDlgItem(IDC_DEADZONE));
@@ -561,19 +565,22 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     stickStretching_.Attach(GetDlgItem(IDC_STRETCH));
     stickRange_.Attach(GetDlgItem(IDC_N64_RANGE));
     stickAngleDeadzone8Dir_.Attach(GetDlgItem(IDC_WANT_DIAGONAL_DZ));
-    stickStretchingDiagonal_.Attach(GetDlgItem(IDC_STRETCH_DIAGONALS));
     stickDeadzoneSpin_.Attach(GetDlgItem(IDC_SPIN_DEADZONE));
     stickAngleDeadzoneSpin_.Attach(GetDlgItem(IDC_SPIN_ANGLE));
+    stickStretchingSpin_.Attach(GetDlgItem(IDC_SPIN_DIAGS));
+    stickRangeSpin_.Attach(GetDlgItem(IDC_SPIN_RANGE));
 
     rawEdit_.Attach(GetDlgItem(IDC_EDIT_RAW));
     rawCompile_.Attach(GetDlgItem(IDC_BUTTON_COMPILE));
 
-    stickDeadzone_.SetScrollRange(0, 100, TRUE);
+    stickDeadzone_    .SetScrollRange(0, 100, TRUE);
     stickDeadzoneSpin_.SetScrollRange(0, 100, TRUE);
-    stickAngleDeadzone_.SetScrollRange(0, 100, TRUE);
+    stickAngleDeadzone_    .SetScrollRange(0, 100, TRUE);
     stickAngleDeadzoneSpin_.SetScrollRange(0, 100, TRUE);
-    stickRange_.SetScrollRange(60, 127, TRUE);
-    stickStretching_.SetScrollRange(0, 50, TRUE);
+    stickRange_         .SetScrollRange(60, 127, TRUE);
+    stickRangeSpin_     .SetScrollRange(60, 127, TRUE);
+    stickStretching_    .SetScrollRange(0, 50, TRUE);
+    stickStretchingSpin_.SetScrollRange(0, 50, TRUE);
 
     SetWindowSubclass(stickPicture_.m_hWnd, PictureSubclassProc, (UINT_PTR)this, (DWORD_PTR)this);
 
@@ -706,15 +713,17 @@ void Dlg::refreshTypeWindows(int type)
     static CWindow* sticks[] = { &stickLabel1_,
         &stickLabel2_,
         &stickLabel3_,
+        &stickLabel4_,
         &stickPicture_,
         &stickDeadzone_,
         &stickAngleDeadzone_,
         &stickStretching_,
         &stickRange_,
         &stickAngleDeadzone8Dir_,
-        &stickStretchingDiagonal_,
         &stickDeadzoneSpin_,
         &stickAngleDeadzoneSpin_,
+        &stickStretchingSpin_,
+        &stickRangeSpin_,
         &stickXboxOptions_
     };
     static CWindow* raw[] = { &rawEdit_, &rawCompile_ };
@@ -788,7 +797,6 @@ LRESULT Dlg::onListItemChanged(NMHDR* phdr)
         stickDeadzone_.SetWindowTextA(std::to_string((int)roundf(stick->deadzone * 100.f)).c_str());
         stickAngleDeadzone_.SetWindowTextA(std::to_string((int)roundf(stick->angleDeadzone * 100.f)).c_str());
         stickAngleDeadzone8Dir_.SetCheck(stick->angleDeadzoneWithDiagonals ? BST_CHECKED : BST_UNCHECKED);
-        stickStretchingDiagonal_.SetCheck(stick->stretcher ? BST_CHECKED : BST_UNCHECKED);
         stickStretching_.SetWindowTextA(std::to_string((int)roundf(stick->stretcher * 100.f)).c_str());
         stickRange_.SetWindowTextA(std::to_string(stick->range).c_str());
     }
@@ -1088,7 +1096,6 @@ void Dlg::refreshStick()
     float angleDeadzone = 0.f;
     bool angleDeadzoneWithDiagonals = false;
     float stretch = 0.f;
-    bool stretcherDiagonal = false;
     int range = 85;
     try
     {
@@ -1099,7 +1106,6 @@ void Dlg::refreshStick()
         angleDeadzoneWithDiagonals = stickAngleDeadzone8Dir_.GetCheck() == BST_CHECKED;
         if (auto str = extract(stickStretching_))
             stretch = std::stof(*str);
-        stretcherDiagonal = stickStretchingDiagonal_.GetCheck() == BST_CHECKED;
         if (auto str = extract(stickRange_))
             range = std::stoi(*str);
     }
