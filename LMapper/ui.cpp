@@ -126,6 +126,7 @@ protected:
 
     LRESULT onDigitalXboxChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT onDigitalN64Changed(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT onStickXboxChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
     LRESULT onTypeChanged(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
@@ -180,6 +181,7 @@ public:
         NOTIFY_HANDLER_EX(IDC_LIST_MAPPINGS, LVN_ITEMCHANGED, onListItemChanged)
         COMMAND_HANDLER(IDC_COMBO_XBOX, CBN_SELCHANGE, onDigitalXboxChanged)
         COMMAND_HANDLER(IDC_COMBO_N64, CBN_SELCHANGE, onDigitalN64Changed)
+        COMMAND_HANDLER(IDC_COMBO_XBOX_STICKS, CBN_SELCHANGE, onStickXboxChanged)
         COMMAND_HANDLER(IDC_COMBO_TYPE, CBN_SELCHANGE, onTypeChanged)
         COMMAND_HANDLER(IDC_DEADZONE, EN_CHANGE, onStickChangeDeadzone)
         COMMAND_HANDLER(IDC_ANGLE_DEADZONE, EN_CHANGE, onStickChangeAngleDeadzone)
@@ -440,8 +442,9 @@ static Mapping::IMapperPtr makeMapper(Simple::FromButton from, Simple::ToButton 
     return {};
 }
 
-static std::optional<Simple::FromButton> fromX360ToButton(SHORT wButtons)
+static std::optional<Simple::FromButton> fromX360ToButton(const XINPUT_STATE& state)
 {
+    const auto& wButtons = state.Gamepad.wButtons;
     if (wButtons & XINPUT_GAMEPAD_DPAD_UP)        return Simple::FromButton::DpadUp;
     if (wButtons & XINPUT_GAMEPAD_DPAD_DOWN)      return Simple::FromButton::DpadDown;
     if (wButtons & XINPUT_GAMEPAD_DPAD_LEFT)      return Simple::FromButton::DpadLeft;
@@ -459,6 +462,28 @@ static std::optional<Simple::FromButton> fromX360ToButton(SHORT wButtons)
 
     // Undoc?
     if (wButtons & 0x0400)                        return Simple::FromButton::Guide;
+
+    const auto& sThumbLX = state.Gamepad.sThumbLX;
+    if (sThumbLX < -Simple::X360ThumbToButtonRange) return Simple::FromButton::LeftStickLeft;
+    if (sThumbLX > Simple::X360ThumbToButtonRange)  return Simple::FromButton::LeftStickRight;
+
+    const auto& sThumbLY = state.Gamepad.sThumbLY;
+    if (sThumbLY < -Simple::X360ThumbToButtonRange) return Simple::FromButton::LeftStickDown;
+    if (sThumbLY > Simple::X360ThumbToButtonRange)  return Simple::FromButton::LeftStickUp;
+
+    const auto& sThumbRX = state.Gamepad.sThumbRX;
+    if (sThumbRX < -Simple::X360ThumbToButtonRange) return Simple::FromButton::RightStickLeft;
+    if (sThumbRX > Simple::X360ThumbToButtonRange)  return Simple::FromButton::RightStickRight;
+
+    const auto& sThumbRY = state.Gamepad.sThumbRY;
+    if (sThumbRY < -Simple::X360ThumbToButtonRange) return Simple::FromButton::RightStickDown;
+    if (sThumbRY > Simple::X360ThumbToButtonRange)  return Simple::FromButton::RightStickUp;
+
+    const auto& bLeftTrigger = state.Gamepad.bLeftTrigger;
+    if (bLeftTrigger > Simple::X360TriggerToButtonRange) return Simple::FromButton::LeftTrigger;
+
+    const auto& bRightTrigger = state.Gamepad.bRightTrigger;
+    if (bRightTrigger > Simple::X360TriggerToButtonRange) return Simple::FromButton::RightTrigger;
 
     return std::nullopt;
 }
@@ -871,7 +896,7 @@ void Dlg::onTimer()
             digitalKeyboard_.SetWindowText(text.c_str());
         }
 
-        if (auto from = fromX360ToButton(state.Gamepad.wButtons))
+        if (auto from = fromX360ToButton(state))
         {
             digitalXboxOptions_.SetCurSel((int)*from);
             choosingReset();
@@ -1090,7 +1115,9 @@ void Dlg::refreshStick()
 
     auto from = selectedFromStick();
     if (!from)
-        return;
+    {
+        from = Simple::FromStick::Left;
+    }
 
     float deadzone = 0.f;
     float angleDeadzone = 0.f;
@@ -1110,9 +1137,7 @@ void Dlg::refreshStick()
             range = std::stoi(*str);
     }
     catch (...)
-    {
-        return;
-    }
+    { }
 
     deadzone = std::clamp(deadzone, 0.f, 100.f);
     angleDeadzone = std::clamp(angleDeadzone, 0.f, 100.f);
@@ -1165,6 +1190,12 @@ LRESULT Dlg::onDigitalXboxChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 LRESULT Dlg::onDigitalN64Changed(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     refreshDigital();
+    return 0;
+}
+
+LRESULT Dlg::onStickXboxChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    refreshStick();
     return 0;
 }
 
