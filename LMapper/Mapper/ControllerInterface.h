@@ -113,7 +113,14 @@ namespace ControllerInterface
     {
     public:
         virtual ~IModifier() = default;
-        virtual std::optional<Simple::ToButton> ToSimpleButton() const = 0;
+        virtual std::optional<Simple::ToButton> ToSimpleButton() const
+        {
+            return std::nullopt;
+        }
+        virtual std::optional<Simple::LunaRawButton> ToSimpleLunaRawButton() const
+        {
+            return std::nullopt;
+        }
         virtual void Alter(ControllerT&) const = 0;
     };
 

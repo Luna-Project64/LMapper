@@ -77,10 +77,17 @@ namespace Simple
 
         LoadState,
         SaveState,
-        UnlockFPS,
-        LockFPS,
+        ToggleFPS,
 
         Count,
+    };
+
+    enum class LunaRawButton
+    {
+        LoadState,
+        SaveState,
+        UnlockFPS,
+        LockFPS,
     };
 
     struct ButtonMapping

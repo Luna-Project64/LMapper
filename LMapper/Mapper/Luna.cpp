@@ -14,18 +14,18 @@ namespace Luna
         /* LUNA_EXCMD_LOCK_FPS   */ "lock_fps"
     };
 
-    std::optional<Simple::ToButton> Cmd::ToSimpleButton() const
+    std::optional<Simple::LunaRawButton> Cmd::ToSimpleLunaRawButton() const
     {
         switch (cmd_)
         {
         case LUNA_EXCMD_LOAD_STATE:
-            return Simple::ToButton::LoadState;
+            return Simple::LunaRawButton::LoadState;
         case LUNA_EXCMD_SAVE_STATE:
-            return Simple::ToButton::SaveState;
+            return Simple::LunaRawButton::SaveState;
         case LUNA_EXCMD_UNLOCK_FPS:
-            return Simple::ToButton::UnlockFPS;
+            return Simple::LunaRawButton::UnlockFPS;
         case LUNA_EXCMD_LOCK_FPS:
-            return Simple::ToButton::LockFPS;
+            return Simple::LunaRawButton::LockFPS;
         }
 
         return std::nullopt;

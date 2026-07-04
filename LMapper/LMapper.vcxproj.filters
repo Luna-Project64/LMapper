@@ -153,6 +153,9 @@
     <ClInclude Include="Mapper\KeyboardXMacro.h">
       <Filter>Source Files\Mapper</Filter>
     </ClInclude>
+    <ClInclude Include="Mapper\Toggle.h">
+      <Filter>Header Files\Mapper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -196,6 +199,9 @@
     </ClCompile>
     <ClCompile Include="ui.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mapper\Toggle.cpp">
+      <Filter>Source Files\Mapper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

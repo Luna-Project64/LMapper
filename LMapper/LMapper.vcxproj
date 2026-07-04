@@ -207,6 +207,7 @@
     <ClInclude Include="Mapper\SerializationImpl.h" />
     <ClInclude Include="Mapper\SimpleConfig.h" />
     <ClInclude Include="Mapper\Switch.h" />
+    <ClInclude Include="Mapper\Toggle.h" />
     <ClInclude Include="Mapper\utils.h" />
     <ClInclude Include="Mapper\X360Controller.h" />
     <ClInclude Include="plugin.h" />
@@ -242,6 +243,7 @@
     <ClCompile Include="Mapper\Keyboard.cpp" />
     <ClCompile Include="Mapper\Luna.cpp" />
     <ClCompile Include="Mapper\Switch.cpp" />
+    <ClCompile Include="Mapper\Toggle.cpp" />
     <ClCompile Include="plugin.cpp" />
     <ClCompile Include="Mapper\ControllerInterface.cpp" />
     <ClCompile Include="Mapper\Mapping.cpp" />

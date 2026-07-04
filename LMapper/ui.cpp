@@ -26,6 +26,7 @@
 #include "Mapper/Keyboard.h"
 #include "Mapper/Luna.h"
 #include "Mapper/MappingImpl.h"
+#include "Mapper/Toggle.h"
 #include "Win.h"
 
 #include <chrono>
@@ -299,10 +300,11 @@ static const char* toString(Simple::ToButton button)
         return "Load State";
     case Simple::ToButton::SaveState:
         return "Save State";
-    case Simple::ToButton::UnlockFPS:
-        return "Unlock FPS";
-    case Simple::ToButton::LockFPS:
-        return "Lock FPS";
+    case Simple::ToButton::ToggleFPS:
+        return "Toggle FPS";
+
+    default:
+        break;
     }
 
     return nullptr;
@@ -360,7 +362,7 @@ static X360::IEventPtr makeMapper(Simple::FromButton from)
     return {};
 }
 
-static N64::IModifierPtr makeMapper(Simple::ToButton to)
+static N64::IModifierPtr makeToMapper(Simple::ToButton to)
 {
     switch (to)
     {
@@ -376,18 +378,10 @@ static N64::IModifierPtr makeMapper(Simple::ToButton to)
         return std::make_unique<N64::Axis>(N64::Axises::X, -Simple::N64StickToButtonRange);
     case Simple::ToButton::StickRight:
         return std::make_unique<N64::Axis>(N64::Axises::X, Simple::N64StickToButtonRange);
-
-    case Simple::ToButton::LoadState:
-        return std::make_unique<Luna::Cmd>(LUNA_EXCMD_LOAD_STATE);
-    case Simple::ToButton::SaveState:
-        return std::make_unique<Luna::Cmd>(LUNA_EXCMD_SAVE_STATE);
-    case Simple::ToButton::UnlockFPS:
-        return std::make_unique<Luna::Cmd>(LUNA_EXCMD_UNLOCK_FPS);
-    case Simple::ToButton::LockFPS:
-        return std::make_unique<Luna::Cmd>(LUNA_EXCMD_LOCK_FPS);
+    default:
+        break;
     }
 
-    MessageBox(NULL, "Unknown ToButton", "Error", MB_ICONERROR);
     return {};
 }
 
@@ -420,14 +414,28 @@ static std::string toMFCString(const YAML::Node& node)
 static Mapping::IMapperPtr makeMapper(Simple::FromButton from, Simple::ToButton to)
 {
     auto fromMapper = makeMapper(from);
-    auto toMapper = makeMapper(to);
-
-    if (!fromMapper || !toMapper)
+    if (!fromMapper)
     {
         return {};
     }
 
-    return std::make_unique<Mapping::Digital::Mapper>(std::move(fromMapper), std::move(toMapper));
+    if (auto toMapper = makeToMapper(to))
+    {
+        return std::make_unique<Mapping::Digital::Mapper>(std::move(fromMapper), std::move(toMapper));
+    }
+
+    switch (to)
+    {
+    case Simple::ToButton::LoadState:
+        return std::make_unique<Mapping::Toggler>(std::move(fromMapper), std::make_unique<Luna::Cmd>(LUNA_EXCMD_LOAD_STATE), N64::IModifierPtr{});
+    case Simple::ToButton::SaveState:
+        return std::make_unique<Mapping::Toggler>(std::move(fromMapper), std::make_unique<Luna::Cmd>(LUNA_EXCMD_SAVE_STATE), N64::IModifierPtr{});
+    case Simple::ToButton::ToggleFPS:
+        return std::make_unique<Mapping::Toggler>(std::move(fromMapper), std::make_unique<Luna::Cmd>(LUNA_EXCMD_UNLOCK_FPS), std::make_unique<Luna::Cmd>(LUNA_EXCMD_LOCK_FPS));
+    }
+
+    MessageBox(NULL, "Unknown Act", "Error", MB_ICONERROR);
+    return {};
 }
 
 static std::optional<Simple::FromButton> fromX360ToButton(SHORT wButtons)
@@ -817,6 +825,7 @@ LRESULT Dlg::onKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
         {
             digitalN64Options_.SetCurSel((int)*button);
             choosingReset();
+            refreshDigital();
         }
     }
 
@@ -858,6 +867,7 @@ void Dlg::onTimer()
         {
             digitalXboxOptions_.SetCurSel((int)*from);
             choosingReset();
+            refreshDigital();
         }
     }
 

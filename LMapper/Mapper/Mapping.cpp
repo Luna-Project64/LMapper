@@ -6,6 +6,7 @@
 #include "MappingImpl.h"
 #include "Switch.h"
 #include "Group.h"
+#include "Toggle.h"
 
 namespace Mapping
 {
@@ -109,6 +110,11 @@ namespace YAML
             else if (type == "group")
             {
                 mapper = node.as<Mapping::GroupPtr>();
+                return true;
+            }
+            else if (type == "toggle")
+            {
+                mapper = node.as<Mapping::TogglerPtr>();
                 return true;
             }
         }
