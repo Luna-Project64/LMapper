@@ -499,15 +499,15 @@ LRESULT Dlg::pictureSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         HPEN hPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
         HPEN hOldPen = (HPEN)SelectObject(hMemDC, hPen);
 
-        MoveToEx(hMemDC, asScreenInt(width, -80.f / 128.f), asScreenInt(height, 0), NULL);
+        MoveToEx(hMemDC, asScreenInt(width, -85.f / 128.f), asScreenInt(height, 0), NULL);
         LineTo(hMemDC, asScreenInt(width, -70.f / 128.f), asScreenInt(height, -70.f / 128.f));
-        LineTo(hMemDC, asScreenInt(width, 0), asScreenInt(height, -80.f / 128.f));
+        LineTo(hMemDC, asScreenInt(width, 0), asScreenInt(height, -85.f / 128.f));
         LineTo(hMemDC, asScreenInt(width, 70.f / 128.f), asScreenInt(height, -70.f / 128.f));
-        LineTo(hMemDC, asScreenInt(width, 80.f / 128.f), asScreenInt(height, 0));
+        LineTo(hMemDC, asScreenInt(width, 85.f / 128.f), asScreenInt(height, 0));
         LineTo(hMemDC, asScreenInt(width, 70.f / 128.f), asScreenInt(height, 70.f / 128.f));
-        LineTo(hMemDC, asScreenInt(width, 0), asScreenInt(height, 80.f / 128.f));
+        LineTo(hMemDC, asScreenInt(width, 0), asScreenInt(height, 85.f / 128.f));
         LineTo(hMemDC, asScreenInt(width, -70.f / 128.f), asScreenInt(height, 70.f / 128.f));
-        LineTo(hMemDC, asScreenInt(width, -80.f / 128.f), asScreenInt(height, 0));
+        LineTo(hMemDC, asScreenInt(width, -85.f / 128.f), asScreenInt(height, 0));
 
         MoveToEx(hMemDC, asScreenInt(width, drawY_) - 1, asScreenInt(height, -drawX_), NULL);
         LineTo(hMemDC, asScreenInt(width, drawY_) + 2, asScreenInt(height, -drawX_));
@@ -1089,7 +1089,7 @@ void Dlg::refreshStick()
     bool angleDeadzoneWithDiagonals = false;
     float stretch = 0.f;
     bool stretcherDiagonal = false;
-    int range = 80;
+    int range = 85;
     try
     {
         if (auto str = extract(stickDeadzone_))

@@ -121,8 +121,8 @@ namespace Simple
     
     constexpr int X360TriggerToButtonRange = 200;
     constexpr int X360ThumbToButtonRange = 16000;
-    constexpr int N64StickToButtonRange = 80;
-    constexpr float ToStretch = 70.f / 80.f;
+    constexpr int N64StickToButtonRange = 85;
+    constexpr float ToStretch = 70.f / 85.f;
 
     static inline bool similar(float a, float b)
     {

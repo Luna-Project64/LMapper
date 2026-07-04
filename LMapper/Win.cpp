@@ -82,7 +82,7 @@ controller:
     offset: LeftX
   toX:
     center: 0
-    max: 90
+    max: 85
     offset: X
   fromY:
     center: 0
@@ -90,76 +90,9 @@ controller:
     offset: LeftY
   toY:
     center: 0
-    max: 90
+    max: 85
     offset: Y
-  deadzone: 0.02
-  angleDeadzone:
-    directions: 4
-    deadzone: 0.1
-
-# The Framewalk button :)
-# Make sure to have this mapping place AFTER stick so it would override the normal stick input
-- from: Y
-  to:
-    type: axis
-    axis: 80
-    offset: Y
-
-# Keyboard controls
-- from: KeyUp
-  to:
-    type: axis
-    axis: 80
-    offset: Y
-- from: KeyDown
-  to:
-    type: axis
-    axis: -80
-    offset: Y
-- from: KeyLeft
-  to:
-    type: axis
-    axis: -80
-    offset: X
-- from: KeyRight
-  to:
-    type: axis
-    axis: 80
-    offset: X
-
-- from: KeyZ
-  to: Z
-- from: KeyX
-  to: A
-- from: KeyC
-  to: B
-
-- from: KeyQ
-  to: L  
-- from: KeyE
-  to: R
-
-- from: KeyW
-  to: CUp
-- from: KeyS
-  to: CDown
-- from: KeyA
-  to: CLeft
-- from: KeyD
-  to: CRight
-
-- from: KeyI
-  to: DpadUp
-- from: KeyK
-  to: DpadDown
-- from: KeyJ
-  to: DpadLeft
-- from: KeyL
-  to: DpadRight
-
-- from: KeyReturn
-  to: Start
-)";
+  deadzone: 0.01)";
 
 namespace Win
 {

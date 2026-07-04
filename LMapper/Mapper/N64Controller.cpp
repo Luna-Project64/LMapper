@@ -180,9 +180,9 @@ namespace N64
 
     static std::optional<Simple::ToButton> toDirection(int value, Simple::ToButton hi, Simple::ToButton lo)
     {
-        if (value == 80)
+        if (value == 85)
             return hi;
-        if (value == -80)
+        if (value == -85)
             return lo;
 
         return std::nullopt;
