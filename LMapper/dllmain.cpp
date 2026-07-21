@@ -124,7 +124,7 @@ EXPORT void CALL GetDllInfo(PLUGIN_INFO* PluginInfo)
 {
     PluginInfo->Version = 0x0100;
     PluginInfo->Type = PLUGIN_TYPE_CONTROLLER;
-    static const char PluginName[] = "LINK's Mapper 1.1.2";
+    static const char PluginName[] = "LINK's Mapper 2.0";
     strncpy_s(PluginInfo->Name, PluginName, sizeof(PluginName));
 }
 

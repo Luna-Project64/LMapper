@@ -32,6 +32,15 @@
 #include <chrono>
 #include <fstream>
 
+static constexpr int kMaxDeadzone = 100;
+static constexpr int kMaxAngleDeadzone = 100;
+static constexpr int kMinStickRange = 80;
+static constexpr int kMaxStickRange = 120;
+static constexpr int kMinStickStretching = -100;
+static constexpr int kMaxStickStretching = 100;
+
+static constexpr float kDiagStretchDownscaling = 500.f;
+
 extern const char* kDefaultConfig;
 
 static std::optional<Simple::FromButton> keyboardToFromButton(unsigned vk)
@@ -74,7 +83,9 @@ protected:
     CComboBox digitalXboxOptions_;
     CButton digitalXboxKeyboard_;
     CComboBox digitalN64Options_;
+#ifdef notyet
     CButton digitalN64Active_;
+#endif
     CWindow digitalKeyboard_;
 
     CWindow stickLabel1_;
@@ -88,10 +99,10 @@ protected:
     CEdit stickStretching_;
     CEdit stickRange_;
     CButton stickAngleDeadzone8Dir_;
-    CWindow stickDeadzoneSpin_;
-    CWindow stickAngleDeadzoneSpin_;
-    CWindow stickStretchingSpin_;
-    CWindow stickRangeSpin_;
+    CUpDownCtrl stickDeadzoneSpin_;
+    CUpDownCtrl stickAngleDeadzoneSpin_;
+    CUpDownCtrl stickStretchingSpin_;
+    CUpDownCtrl stickRangeSpin_;
 
     CEdit rawEdit_;
     CButton rawCompile_;
@@ -575,7 +586,9 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     digitalXboxOptions_.Attach(GetDlgItem(IDC_COMBO_XBOX));
     digitalXboxKeyboard_.Attach(GetDlgItem(IDC_KEY_CHOOSE));
     digitalN64Options_.Attach(GetDlgItem(IDC_COMBO_N64));
+#ifdef notyet
     digitalN64Active_.Attach(GetDlgItem(IDC_N64_ACTIVE));
+#endif
     digitalKeyboard_.Attach(GetDlgItem(IDC_KEY_CHOOSE));
 
 
@@ -598,18 +611,16 @@ LRESULT Dlg::onInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     rawEdit_.Attach(GetDlgItem(IDC_EDIT_RAW));
     rawCompile_.Attach(GetDlgItem(IDC_BUTTON_COMPILE));
 
-    stickDeadzone_    .SetScrollRange(0, 100, TRUE);
-    stickDeadzoneSpin_.SetScrollRange(0, 100, TRUE);
-    stickAngleDeadzone_    .SetScrollRange(0, 100, TRUE);
-    stickAngleDeadzoneSpin_.SetScrollRange(0, 100, TRUE);
-    stickRange_         .SetScrollRange(60, 127, TRUE);
-    stickRangeSpin_     .SetScrollRange(60, 127, TRUE);
-    stickStretching_    .SetScrollRange(0, 50, TRUE);
-    stickStretchingSpin_.SetScrollRange(0, 50, TRUE);
+    stickDeadzoneSpin_.SetRange(0, kMaxDeadzone);
+    stickAngleDeadzoneSpin_.SetRange(0, kMaxAngleDeadzone);
+    stickRangeSpin_     .SetRange(kMinStickRange, kMaxStickRange);
+    stickStretchingSpin_.SetRange(kMinStickStretching, kMaxStickStretching);
 
     SetWindowSubclass(stickPicture_.m_hWnd, PictureSubclassProc, (UINT_PTR)this, (DWORD_PTR)this);
 
+#ifdef notyet
     digitalN64Active_.EnableWindow(FALSE);
+#endif
 
     for (int i = 0; i < (int)Simple::FromButton::Count; i++)
     {
@@ -734,7 +745,11 @@ void Dlg::refreshTypeWindows(int type)
     if (type == curDrawnType_)
         return;
 
-    static CWindow* digitals[] = { &digitalN64Options_, &digitalN64Active_, &digitalKeyboard_, &digitalXboxOptions_ };
+    static CWindow* digitals[] = { &digitalN64Options_,
+#ifdef notyet
+        &digitalN64Active_,
+#endif
+        &digitalKeyboard_, &digitalXboxOptions_ };
     static CWindow* sticks[] = { &stickLabel1_,
         &stickLabel2_,
         &stickLabel3_,
@@ -822,7 +837,7 @@ LRESULT Dlg::onListItemChanged(NMHDR* phdr)
         stickDeadzone_.SetWindowTextA(std::to_string((int)roundf(stick->deadzone * 100.f)).c_str());
         stickAngleDeadzone_.SetWindowTextA(std::to_string((int)roundf(stick->angleDeadzone * 100.f)).c_str());
         stickAngleDeadzone8Dir_.SetCheck(stick->angleDeadzoneWithDiagonals ? BST_CHECKED : BST_UNCHECKED);
-        stickStretching_.SetWindowTextA(std::to_string((int)roundf(stick->stretcher * 100.f)).c_str());
+        stickStretching_.SetWindowTextA(std::to_string((int)roundf(stick->stretcher * kDiagStretchDownscaling)).c_str());
         stickRange_.SetWindowTextA(std::to_string(stick->range).c_str());
     }
 
@@ -904,16 +919,19 @@ void Dlg::onTimer()
         }
     }
 
-    auto index = selectedIndex_;
-    const auto& mapper = config_.mappers[index];
+    int index = selectedIndex_;
+    if (0 <= index && index < (int) config_.mappers.size())
+    {
+        const auto& mapper = config_.mappers[index];
 
-    X360::Controller from = state.Gamepad;
-    N64::Controller to;
-    mapper->Map(from, activeKeys_, to);
+        X360::Controller from = state.Gamepad;
+        N64::Controller to;
+        mapper->Map(from, activeKeys_, to);
 
-    drawX_ = to.X_AXIS / 128.f;
-    drawY_ = to.Y_AXIS / 128.f;
-    stickPicture_.Invalidate();
+        drawX_ = to.X_AXIS / 128.f;
+        drawY_ = to.Y_AXIS / 128.f;
+        stickPicture_.Invalidate();
+    }
 }
 
 LRESULT Dlg::onReset(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
@@ -1022,6 +1040,9 @@ LRESULT Dlg::onCalibrate(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandle
 
 int Dlg::selectedIndex()
 {
+    if (!controls_.IsWindow())
+        return -1;
+
     return controls_.GetSelectedIndex();
 }
 
@@ -1139,10 +1160,10 @@ void Dlg::refreshStick()
     catch (...)
     { }
 
-    deadzone = std::clamp(deadzone, 0.f, 100.f);
-    angleDeadzone = std::clamp(angleDeadzone, 0.f, 100.f);
-    stretch = std::clamp(stretch, 0.f, 50.f);
-    range = std::clamp(range, 1, 127);
+    deadzone = std::clamp(deadzone, 0.f, (float) kMaxDeadzone);
+    angleDeadzone = std::clamp(angleDeadzone, 0.f, (float) kMaxAngleDeadzone);
+    stretch = std::clamp(stretch, (float) kMinStickStretching, (float) kMaxStickStretching);
+    range = std::clamp(range, kMinStickRange, kMaxStickRange);
 
     if (auto simple = config_.mappers[idx]->ToSimpleConfig())
     {
@@ -1152,7 +1173,7 @@ void Dlg::refreshStick()
                 Simple::similar(stick->deadzone, deadzone / 100.f) &&
                 Simple::similar(stick->angleDeadzone, angleDeadzone / 100.f) &&
                 (Simple::similar(angleDeadzone, 0.f) || stick->angleDeadzoneWithDiagonals == angleDeadzoneWithDiagonals) &&
-                Simple::similar(stick->stretcher, stretch / 100.f) &&
+                Simple::similar(stick->stretcher, stretch / kDiagStretchDownscaling) &&
                 stick->range == range)
             {
                 return;
@@ -1162,7 +1183,7 @@ void Dlg::refreshStick()
 
     Mapping::Analog::BilinearStickMapper::Stretcher stretcher;
     if (stretch)
-        stretcher.emplace(Simple::ToStretch - stretch / 100.f, Simple::ToStretch, 1.f);
+        stretcher.emplace(Simple::ToStretch - stretch / kDiagStretchDownscaling, Simple::ToStretch, 1.f);
 
     Mapping::Analog::BilinearStickMapper::Deadzoner deadzoner;
     if (deadzone)
